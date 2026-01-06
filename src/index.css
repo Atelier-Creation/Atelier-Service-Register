@@ -1,0 +1,133 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  --primary: #4361ee;
+  --secondary: #3f37c9;
+  --success: #4cc9f0;
+  --bg-main: #f8f9fa;
+  --bg-card: #ffffff;
+  --text-main: #2b2d42;
+  --text-secondary: #8d99ae;
+  --border-color: #e9ecef;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,a{
+  cursor: pointer;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animation Utilities */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Component Classes */
+.card {
+  @apply bg-white rounded-xl border border-slate-100 transition-all duration-300;
+  box-shadow: 0 2px 10px -3px rgba(6, 81, 237, 0.1);
+}
+
+.card:hover {
+  @apply border-blue-100;
+  box-shadow: 0 8px 30px -4px rgba(6, 81, 237, 0.1);
+}
+
+.input-field {
+  @apply w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200;
+}
+
+.select-field {
+  @apply w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 cursor-pointer;
+}
+
+.btn-primary {
+  @apply bg-[#4361ee] hover:bg-[#3f37c9] text-white font-medium py-2.5 px-6 rounded-lg shadow-sm shadow-blue-500/30 transition-all duration-200 active:transform active:scale-95;
+}
+
+.btn-secondary {
+  @apply bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-medium py-2.5 px-6 rounded-lg shadow-sm transition-all duration-200;
+}
+
+.btn-ghost {
+  @apply text-slate-500 hover:text-[#4361ee] hover:bg-blue-50 rounded-lg px-4 py-2 transition-colors;
+}
+
+/* Sidebar Navigation */
+.nav-item {
+  @apply flex items-center gap-3 px-4 py-3 rounded-lg text-slate-500 font-medium transition-all duration-200 mb-1;
+}
+
+.nav-item:hover {
+  @apply bg-slate-50 text-[#4361ee];
+}
+
+.nav-item.active {
+  @apply bg-blue-50 text-[#4361ee];
+}
+
+/* Status Badges */
+.status-badge {
+  @apply px-3 py-1 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 border;
+}
+
+.status-received {
+  @apply bg-blue-50 text-blue-600 border-blue-100;
+}
+
+.status-in-progress {
+  @apply bg-amber-50 text-amber-600 border-amber-100;
+}
+
+.status-waiting {
+  @apply bg-orange-50 text-orange-600 border-orange-100;
+}
+
+.status-ready {
+  @apply bg-emerald-50 text-emerald-600 border-emerald-100;
+}
+
+.status-delivered {
+  @apply bg-purple-50 text-purple-600 border-purple-100;
+}

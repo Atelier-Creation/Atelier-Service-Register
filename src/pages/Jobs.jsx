@@ -1,0 +1,614 @@
+import { useState } from 'react';
+import { useJobs } from '../context/JobContext';
+import { useAuth } from '../context/AuthContext';
+import Modal from '../components/ui/Modal';
+import CreatableSelect from '../components/ui/CreatableSelect';
+import Select from '../components/ui/Select';
+import { FiPlus, FiEdit2, FiTrash2, FiX, FiSave, FiFilter, FiSearch, FiExternalLink, FiCheckSquare } from 'react-icons/fi';
+
+const DEVICE_CATEGORIES = {
+    Mobile: ['Apple', 'Samsung', 'Google', 'OnePlus', 'Xiaomi', 'Oppo', 'Vivo', 'Realme', 'Motorola'],
+    Laptop: ['HP', 'Dell', 'Lenovo', 'Acer', 'Asus', 'Apple', 'MSI', 'Microsoft'],
+    CCTV: ['Hikvision', 'CP Plus', 'Dahua', 'Honeywell'],
+    Printer: ['HP', 'Canon', 'Epson', 'Brother'],
+    Other: []
+};
+
+const Jobs = () => {
+    const { jobs, addJob, updateJob, deleteJob } = useJobs();
+    const { user } = useAuth();
+    const [showForm, setShowForm] = useState(false);
+    const [editingJob, setEditingJob] = useState(null);
+    const [showOutsourceModal, setShowOutsourceModal] = useState(false);
+    const [outsourcingJob, setOutsourcingJob] = useState(null);
+    const [outsourceData, setOutsourceData] = useState({ name: '', phone: '', cost: '' });
+
+    // Receive Back State
+    const [showReceiveModal, setShowReceiveModal] = useState(false);
+    const [receivingJob, setReceivingJob] = useState(null);
+    const [receiveData, setReceiveData] = useState({ status: 'ready', cost: '' });
+
+    const [filterStatus, setFilterStatus] = useState('all');
+    const [formData, setFormData] = useState({
+        customerName: '',
+        phone: '',
+        deviceType: '',
+        brand: '',
+        model: '',
+        device: '', // Legacy/Display field
+        issue: '',
+        receivedDate: new Date().toISOString().split('T')[0],
+        estimatedDelivery: '',
+        technician: '',
+        advanceAmount: '',
+        totalAmount: '',
+        status: 'received',
+        totalAmount: '',
+        status: 'received',
+    });
+
+    const handleOutsource = (job) => {
+        setOutsourcingJob(job);
+        setOutsourceData({ name: '', phone: '', cost: '' });
+        setShowOutsourceModal(true);
+    };
+
+    const submitOutsource = (e) => {
+        e.preventDefault();
+        if (!outsourcingJob) return;
+
+        updateJob(outsourcingJob.id, {
+            ...outsourcingJob,
+            status: 'outsourced',
+            outsourced: {
+                name: outsourceData.name,
+                phone: outsourceData.phone,
+                cost: outsourceData.cost,
+                date: new Date().toISOString()
+            }
+        });
+        setShowOutsourceModal(false);
+        setOutsourcingJob(null);
+    };
+
+    const handleReceiveBack = (job) => {
+        setReceivingJob(job);
+        setReceiveData({
+            status: 'ready',
+            cost: job.outsourced?.cost || '0'
+        });
+        setShowReceiveModal(true);
+    };
+
+    const submitReceiveBack = (e) => {
+        e.preventDefault();
+        if (!receivingJob) return;
+
+        updateJob(receivingJob.id, {
+            status: receiveData.status,
+            outsourced: {
+                ...receivingJob.outsourced,
+                cost: receiveData.cost
+            }
+        });
+        setShowReceiveModal(false);
+        setReceivingJob(null);
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+
+        // Construct legacy device string for table display
+        const fullDeviceName = `${formData.brand} ${formData.model} (${formData.deviceType})`.trim();
+        const submissionData = { ...formData, device: fullDeviceName };
+
+        if (editingJob) {
+            updateJob(editingJob.id, submissionData);
+            setEditingJob(null);
+        } else {
+            addJob(submissionData);
+        }
+        resetForm();
+        setShowForm(false);
+    };
+
+    const handleEdit = (job) => {
+        setEditingJob(job);
+        setFormData({
+            customerName: job.customerName,
+            phone: job.phone,
+            device: job.device,
+            deviceType: job.deviceType || 'Other',
+            brand: job.brand || '',
+            model: job.model || job.device || '',
+            issue: job.issue,
+            receivedDate: job.receivedDate,
+            estimatedDelivery: job.estimatedDelivery,
+            technician: job.technician,
+            advanceAmount: job.advanceAmount,
+            totalAmount: job.totalAmount,
+            status: job.status,
+        });
+        setShowForm(true);
+    };
+
+    const handleDelete = (jobId) => {
+        if (window.confirm('Are you sure you want to delete this order?')) {
+            deleteJob(jobId);
+        }
+    };
+
+    const resetForm = () => {
+        setFormData({
+            customerName: '',
+            phone: '',
+            deviceType: '',
+            brand: '',
+            model: '',
+            device: '',
+            issue: '',
+            receivedDate: new Date().toISOString().split('T')[0],
+            estimatedDelivery: '',
+            technician: '',
+            advanceAmount: '',
+            totalAmount: '',
+            status: 'received',
+        });
+    };
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const getStatusClass = (status) => {
+        const classes = {
+            received: 'status-received',
+            'in-progress': 'status-in-progress',
+            waiting: 'status-waiting',
+            ready: 'status-ready',
+            waiting: 'status-waiting',
+            ready: 'status-ready',
+            delivered: 'status-delivered',
+            outsourced: 'bg-purple-50 text-purple-600 border-purple-100', // Custom style for outsourced
+        };
+        return classes[status] || 'status-received';
+    };
+
+    const filteredJobs = filterStatus === 'all'
+        ? jobs
+        : jobs.filter(job => job.status === filterStatus);
+
+    const sortedJobs = [...filteredJobs].sort((a, b) =>
+        new Date(b.createdAt) - new Date(a.createdAt)
+    );
+
+    return (
+        <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
+            {/* Header */}
+            <div className="flex flex-row items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-800">Orders</h1>
+                    <p className="text-slate-500 text-sm mt-1">Manage all service orders</p>
+                </div>
+                {['admin', 'technician'].includes(user?.role) && (
+                    <button
+                        onClick={() => {
+                            setShowForm(true);
+                            setEditingJob(null);
+                            resetForm();
+                        }}
+                        className="btn-primary flex items-center gap-2"
+                    >
+                        <FiPlus className="w-5 h-5" />
+                        New Order
+                    </button>
+                )}
+            </div>
+
+            {/* Filters & Controls */}
+            <div className="card p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto">
+                    {['all', 'received', 'in-progress', 'waiting', 'ready', 'delivered', 'outsourced'].map((status) => (
+                        <button
+                            key={status}
+                            onClick={() => setFilterStatus(status)}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${filterStatus === status
+                                ? 'bg-blue-50 text-[#4361ee] ring-1 ring-[#4361ee]/20'
+                                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                                }`}
+                        >
+                            {status === 'all' ? 'All Orders' : status.replace('-', ' ')}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Search within table (Visual only for now) */}
+                <div className="relative w-full sm:w-64">
+                    <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                        type="text"
+                        placeholder="Search in orders..."
+                        className="input-field !pl-8 py-2 text-sm"
+                    />
+                </div>
+            </div>
+
+            {/* Jobs Table */}
+            <div className="card overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead className="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Order ID</th>
+                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Customer</th>
+                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Device</th>
+                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Delivery</th>
+                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Balance</th>
+                                <th className="text-right py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {sortedJobs.map((job) => (
+                                <tr key={job.id} className="hover:bg-slate-50/50 transition-colors">
+                                    <td className="py-4 px-6">
+                                        <span className="font-mono text-sm font-medium text-slate-700">#{job.id.slice(-6)}</span>
+                                    </td>
+                                    <td className="py-4 px-6">
+                                        <div>
+                                            <p className="font-medium text-slate-800">{job.customerName}</p>
+                                            <p className="text-slate-500 text-xs">{job.phone}</p>
+                                        </div>
+                                    </td>
+                                    <td className="py-4 px-6">
+                                        <p className="text-slate-700 text-sm max-w-[150px]" title={job.device}>{job.device}</p>
+                                    </td>
+                                    <td className="py-4 px-6">
+                                        <span className={`status-badge capitalize ${getStatusClass(job.status)}`}>
+                                            {job.status.replace('-', ' ')}
+                                        </span>
+                                        {job.status === "outsourced" && job.outsourced && (
+                                            <div className="mt-1.5 text-xs text-purple-600 font-medium">
+                                                <div className="flex items-start gap-1">
+                                                    <span className="opacity-75">With:</span>
+
+                                                    <div className="flex">
+                                                        <span>{job.outsourced.name}</span>
+
+                                                        {job.outsourced.phone && (
+                                                            <span className="text-xs opacity-75 ml-1">
+                                                                ({job.outsourced.phone})
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {["admin"].includes(user?.role) && (
+                                                    <div className="flex items-center gap-1 opacity-75">
+                                                        <span>Paid:</span> ₹{job.outsourced.cost}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                    </td>
+                                    <td className="py-4 px-6 text-slate-500 text-sm">
+                                        {new Date(job.estimatedDelivery).toLocaleDateString()}
+                                    </td>
+                                    <td className="py-4 px-6">
+                                        <p className="font-semibold text-slate-700 text-sm">
+                                            ₹{((parseFloat(job.totalAmount) || 0) - (parseFloat(job.advanceAmount) || 0)).toLocaleString()}
+                                        </p>
+                                    </td>
+                                    <td className="py-4 px-6 text-right">
+                                        <div className="flex items-center justify-end gap-2">
+                                            {['admin', 'technician'].includes(user?.role) && (
+                                                <button
+                                                    onClick={() => handleEdit(job)}
+                                                    className="p-2 text-slate-400 hover:text-[#4361ee] hover:bg-blue-50 rounded-lg transition-colors"
+                                                    title="Edit / Update Status"
+                                                >
+                                                    <FiEdit2 className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                            {['admin', 'technician'].includes(user?.role) && job.status !== 'delivered' && (
+                                                job.status === 'outsourced' ? (
+                                                    <button
+                                                        onClick={() => handleReceiveBack(job)}
+                                                        className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                                        title="Receive Back from 3rd Party"
+                                                    >
+                                                        <FiCheckSquare className="w-4 h-4" />
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleOutsource(job)}
+                                                        className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                                        title="Assign to 3rd Party"
+                                                    >
+                                                        <FiExternalLink className="w-4 h-4" />
+                                                    </button>
+                                                )
+                                            )}
+                                            {user?.role === 'admin' && (
+                                                <button
+                                                    onClick={() => handleDelete(job.id)}
+                                                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                    title="Delete Order"
+                                                >
+                                                    <FiTrash2 className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    {sortedJobs.length === 0 && (
+                        <div className="text-center py-16">
+                            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <FiFilter className="w-8 h-8 text-slate-300" />
+                            </div>
+                            <p className="text-slate-500 font-medium">No orders found</p>
+                            <p className="text-slate-400 text-sm">Try adjusting your filters</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Modal Form */}
+            <Modal
+                isOpen={showForm}
+                onClose={() => setShowForm(false)}
+                title={editingJob ? 'Edit Order Details' : 'Create New Order'}
+            >
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Form sections similar to previous but with updated classes */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                            <h4 className="font-semibold text-slate-900 text-sm uppercase tracking-wide">Customer Info</h4>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Customer Name</label>
+                                <input type="text" name="customerName" value={formData.customerName} onChange={handleChange} className="input-field" required />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
+                                <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="input-field" required />
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <h4 className="font-semibold text-slate-900 text-sm uppercase tracking-wide">Device Details</h4>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <CreatableSelect
+                                    label="Device Type"
+                                    options={Object.keys(DEVICE_CATEGORIES)}
+                                    value={formData.deviceType}
+                                    onChange={(val) => setFormData(prev => ({ ...prev, deviceType: val, brand: '' }))}
+                                    placeholder="Select Type"
+                                />
+                                <CreatableSelect
+                                    label="Brand"
+                                    options={DEVICE_CATEGORIES[formData.deviceType] || []}
+                                    value={formData.brand}
+                                    onChange={(val) => setFormData(prev => ({ ...prev, brand: val }))}
+                                    placeholder="Select Brand"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Model Name/No.</label>
+                                    <input
+                                        type="text"
+                                        name="model"
+                                        value={formData.model}
+                                        onChange={handleChange}
+                                        className="input-field"
+                                        placeholder="e.g. iPhone 13"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Assigned Tech</label>
+                                    <input
+                                        type="text"
+                                        name="technician"
+                                        value={formData.technician}
+                                        onChange={handleChange}
+                                        className="input-field"
+                                        placeholder="Optional"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Issue Description</label>
+                        <textarea name="issue" value={formData.issue} onChange={handleChange} className="input-field min-h-[100px]" required></textarea>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Received Date</label>
+                            <input type="date" name="receivedDate" value={formData.receivedDate} onChange={handleChange} className="input-field" required />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Estimated Delivery</label>
+                            <input
+                                type="date"
+                                name="estimatedDelivery"
+                                value={formData.estimatedDelivery}
+                                onChange={handleChange}
+                                className="input-field"
+                                required
+                                min={new Date().toISOString().split('T')[0]}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="bg-slate-50 p-4 rounded-xl space-y-4 border border-slate-100">
+                        <h4 className="font-semibold text-slate-900 text-sm uppercase tracking-wide">Billing Information</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Total Amount</label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
+                                    <input type="number" name="totalAmount" value={formData.totalAmount} onChange={handleChange} className="input-field !pl-6" required />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Advance</label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
+                                    <input type="number" name="advanceAmount" value={formData.advanceAmount} onChange={handleChange} className="input-field !pl-6" />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Balance Pending</label>
+                                <div className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-slate-700 font-bold">
+                                    ₹{(parseFloat(formData.totalAmount) || 0) - (parseFloat(formData.advanceAmount) || 0)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Current Status</label>
+                        <Select
+                            value={formData.status}
+                            onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
+                            options={[
+                                { value: 'received', label: 'Received' },
+                                { value: 'in-progress', label: 'In Progress' },
+                                { value: 'waiting', label: 'Waiting for Parts' },
+                                { value: 'ready', label: 'Ready for Delivery' },
+                                { value: 'delivered', label: 'Delivered' }
+                            ]}
+                        />
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                        <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">Cancel</button>
+                        <button type="submit" className="btn-primary flex items-center gap-2">
+                            <FiSave />
+                            {editingJob ? 'Save Changes' : 'Create Order'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* Outsource Job Modal */}
+            <Modal
+                isOpen={showOutsourceModal}
+                onClose={() => setShowOutsourceModal(false)}
+                title="Assign to 3rd Party Technician"
+            >
+                <form onSubmit={submitOutsource} className="space-y-6">
+                    <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-4 text-sm text-yellow-800 mb-4">
+                        You are assigning this order to an external technician. The status will be updated to <b>Outsourced</b>.
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">3rd Party Name / Shop</label>
+                        <input
+                            type="text"
+                            required
+                            className="input-field"
+                            placeholder="e.g. City Mobile repair"
+                            value={outsourceData.name}
+                            onChange={(e) => setOutsourceData({ ...outsourceData, name: e.target.value })}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
+                        <input
+                            type="tel"
+                            className="input-field"
+                            placeholder="Optional"
+                            value={outsourceData.phone}
+                            onChange={(e) => setOutsourceData({ ...outsourceData, phone: e.target.value })}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Cost / Amount Paid</label>
+                        <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
+                            <input
+                                type="number"
+                                required
+                                className="input-field !pl-8"
+                                placeholder="0.00"
+                                value={outsourceData.cost}
+                                onChange={(e) => setOutsourceData({ ...outsourceData, cost: e.target.value })}
+                            />
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">This is the cost paid to the 3rd party, not the customer price.</p>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                        <button type="button" onClick={() => setShowOutsourceModal(false)} className="btn-secondary">Cancel</button>
+                        <button type="submit" className="btn-primary bg-purple-600 hover:bg-purple-700 shadow-purple-200">
+                            Confirm Assignment
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* Receive Back Modal */}
+            <Modal
+                isOpen={showReceiveModal}
+                onClose={() => setShowReceiveModal(false)}
+                title="Receive Device from 3rd Party"
+            >
+                <form onSubmit={submitReceiveBack} className="space-y-6">
+                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm text-slate-600 mb-4">
+                        Confirming return of <b>{receivingJob?.device}</b> from <b>{receivingJob?.outsourced?.name}</b>.
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Repair Outcome (New Status)</label>
+                        <Select
+                            value={receiveData.status}
+                            onChange={(val) => setReceiveData({ ...receiveData, status: val })}
+                            options={[
+                                { value: 'ready', label: 'Repaired (Mark as Ready)' },
+                                { value: 'received', label: 'Not Repaired (Back to Received)' },
+                                { value: 'in-progress', label: 'Needs More Work (In Progress)' }
+                            ]}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Final 3rd Party Cost</label>
+                        <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
+                            <input
+                                type="number"
+                                required
+                                className="input-field !pl-8"
+                                value={receiveData.cost}
+                                onChange={(e) => setReceiveData({ ...receiveData, cost: e.target.value })}
+                            />
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">Adjust if the final amount paid differs from the estimate.</p>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                        <button type="button" onClick={() => setShowReceiveModal(false)} className="btn-secondary">Cancel</button>
+                        <button type="submit" className="btn-primary flex items-center gap-2">
+                            <FiCheckSquare /> Confirm Return
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+        </div>
+    );
+};
+
+export default Jobs;
