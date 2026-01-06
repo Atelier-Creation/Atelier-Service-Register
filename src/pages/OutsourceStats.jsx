@@ -3,6 +3,7 @@ import { useJobs } from '../context/JobContext';
 import { FiTrendingUp, FiTool, FiClock, FiExternalLink, FiCalendar } from 'react-icons/fi';
 import { MdOutlineCurrencyRupee } from 'react-icons/md';
 import Select from '../components/ui/Select';
+import StatCard from '../components/ui/StatCard';
 
 const OutsourceStats = () => {
     const { jobs } = useJobs();
@@ -96,37 +97,32 @@ const OutsourceStats = () => {
                 </div>
 
                 {/* Total Expenditure */}
-                <div className="card p-6 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
-                        <MdOutlineCurrencyRupee className="w-6 h-6" />
-                    </div>
-                    <div>
-                        <p className="text-slate-500 text-sm font-medium">Total Expenditure</p>
-                        <h3 className="text-2xl font-bold text-slate-800">₹{totalSpent.toLocaleString()}</h3>
-                    </div>
-                </div>
+                {/* Total Expenditure */}
+                <StatCard
+                    value={`₹${totalSpent.toLocaleString()}`}
+                    label="Total Expenditure"
+                    icon={MdOutlineCurrencyRupee}
+                    color="bg-purple-100 text-purple-600"
+                    decorationColor="text-purple-600"
+                />
 
                 {/* Total Outsourced */}
-                <div className="card p-6 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-[#4361ee]">
-                        <FiTool className="w-6 h-6" />
-                    </div>
-                    <div>
-                        <p className="text-slate-500 text-sm font-medium">Total Outsourced Orders</p>
-                        <h3 className="text-2xl font-bold text-slate-800">{totalOutsourcedCount}</h3>
-                    </div>
-                </div>
+                <StatCard
+                    value={totalOutsourcedCount}
+                    label="Total Outsourced Orders"
+                    icon={FiTool}
+                    color="bg-blue-100 text-[#4361ee]"
+                    decorationColor="text-[#4361ee]"
+                />
 
                 {/* Currently Active */}
-                <div className="card p-6 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
-                        <FiClock className="w-6 h-6" />
-                    </div>
-                    <div>
-                        <p className="text-slate-500 text-sm font-medium">Currently With 3rd Party</p>
-                        <h3 className="text-2xl font-bold text-slate-800">{currentActiveOutsourced}</h3>
-                    </div>
-                </div>
+                <StatCard
+                    value={currentActiveOutsourced}
+                    label="Currently With 3rd Party"
+                    icon={FiClock}
+                    color="bg-orange-100 text-orange-600"
+                    decorationColor="text-orange-600"
+                />
             </div>
 
             {/* Technician Leaderboard */}
