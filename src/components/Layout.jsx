@@ -26,10 +26,10 @@ const Layout = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-slate-50 flex">
+        <div className="h-screen overflow-hidden bg-slate-50 flex">
             {/* Sidebar */}
             <aside
-                className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform transition-transform duration-300 lg:translate-x-0 lg:static lg:inset-auto ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+                className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform transition-transform duration-300 lg:translate-x-0 lg:static lg:inset-auto flex flex-col ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                     }`}
             >
                 {/* Logo */}
@@ -44,7 +44,7 @@ const Layout = () => {
                 </div>
 
                 {/* Navigation */}
-                <nav className="p-4 space-y-1">
+                <nav className="flex-1 overflow-y-auto p-4 space-y-1">
                     {menuItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = location.pathname === item.path;
@@ -63,7 +63,7 @@ const Layout = () => {
                 </nav>
 
                 {/* Sidebar Footer */}
-                <div className="absolute bottom-0 w-full p-4 border-t border-slate-100">
+                <div className="p-4 border-t border-slate-100 shrink-0">
                     <button
                         onClick={handleLogout}
                         className="flex items-center gap-3 px-4 py-3 w-full text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
