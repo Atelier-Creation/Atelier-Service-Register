@@ -2,49 +2,90 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
     FiHome, FiFileText, FiSearch, FiUsers, FiSettings,
-    FiLogOut, FiMenu, FiX, FiBell, FiChevronDown, FiTrendingUp
+    FiLogOut, FiMenu, FiX, FiBell, FiChevronDown, FiTrendingUp,
+    FiChevronLeft, FiChevronRight
 } from 'react-icons/fi';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 const Layout = () => {
     const { user, logout } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const userMenuRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+                setUserMenuOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     const handleLogout = () => {
         logout();
         navigate('/login');
     };
 
+    // ... (menuItems remain same)
     const menuItems = [
         { path: '/', icon: FiHome, label: 'Dashboard' },
         { path: '/jobs', icon: FiFileText, label: 'Orders' },
-        { path: '/3rd-party-stats', icon: FiTrendingUp, label: 'Out Source' },
+        { path: '/3rd-party-stats', icon: FiFileText, label: 'Out Source' },
         { path: '/customers', icon: FiUsers, label: 'Customers' },
-        ...(user?.role === 'admin' ? [{ path: '/settings', icon: FiSettings, label: 'Settings' }] : []),
+        ...(user?.role === 'admin' ? [
+            { path: '/reports', icon: FiTrendingUp, label: 'Reports' },
+            { path: '/settings', icon: FiSettings, label: 'Settings' }
+        ] : []),
     ];
 
     return (
         <div className="h-screen overflow-hidden bg-slate-50 flex">
             {/* Sidebar */}
             <aside
-                className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform transition-transform duration-300 lg:translate-x-0 lg:static lg:inset-auto flex flex-col ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-                    }`}
+                className={`fixed inset-y-0 left-0 z-50 bg-white border-r border-slate-200 
+                transform transition-all duration-300 
+                flex flex-col lg:static lg:inset-auto overflow-visible
+                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+                w-64 ${isCollapsed ? 'lg:w-20' : 'lg:w-64'}
+                `}
             >
                 {/* Logo */}
-                <div className="h-16 flex items-center px-6 border-b border-slate-100">
-                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
-                        <img src="/Dark_Logo.png" alt="Atelier Logo" srcset="/Dark_Logo.png" className='h-8 w-8 object-contain' />
+                <div className={`h-16 flex items-center border-b border-slate-100 relative transition-all duration-300 ${isCollapsed ? 'justify-center px-0' : 'px-6'}`}>
+                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
+                        <img src="/Dark_Logo.png" alt="Logo" className='h-6 w-6 object-contain' />
                     </div>
-                    <div>
+                    <div className={`ml-3 overflow-hidden transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
                         <h1 className="font-bold text-slate-800 text-lg leading-tight">Atelier</h1>
                         <p className="text-xs text-slate-400 font-medium">Service Register</p>
                     </div>
+
+                    {/* Desktop Toggle Button - Positioned on the border */}
+                    <button
+                        onClick={() => setIsCollapsed(!isCollapsed)}
+                        className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white border border-slate-200 rounded-full items-center justify-center text-slate-400 hover:text-blue-600 shadow-sm z-50 hover:bg-slate-50 transition-colors cursor-pointer"
+                    >
+                        {isCollapsed ? <FiChevronRight size={14} /> : <FiChevronLeft size={14} />}
+                    </button>
+
+                    {/* Mobile Close Button (only visible on mobile when open) */}
+                    <button
+                        onClick={() => setSidebarOpen(false)}
+                        className="lg:hidden absolute right-4 text-slate-400"
+                    >
+                        <FiX size={20} />
+                    </button>
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+                <nav className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-1">
                     {menuItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = location.pathname === item.path;
@@ -53,23 +94,32 @@ const Layout = () => {
                                 key={item.path}
                                 to={item.path}
                                 onClick={() => setSidebarOpen(false)}
-                                className={`nav-item ${isActive ? 'active' : ''}`}
+                                title={isCollapsed ? item.label : ''}
+                                className={`flex items-center px-3 py-3 rounded-lg font-medium transition-all duration-200 mb-1
+                                    ${isActive ? 'bg-blue-50 text-[#4361ee]' : 'text-slate-500 hover:bg-slate-50 hover:text-[#4361ee]'}
+                                    ${isCollapsed ? 'justify-center' : 'gap-3'}
+                                `}
                             >
-                                <Icon className={`w-5 h-5 ${isActive ? 'text-[#4361ee]' : 'text-slate-400'}`} />
-                                <span>{item.label}</span>
+                                <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-[#4361ee]' : 'text-slate-400'}`} />
+                                <span className={`whitespace-nowrap overflow-hidden transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
+                                    {item.label}
+                                </span>
                             </Link>
                         );
                     })}
                 </nav>
 
                 {/* Sidebar Footer */}
-                <div className="p-4 border-t border-slate-100 shrink-0">
+                <div className="p-3 border-t border-slate-100 shrink-0">
                     <button
                         onClick={handleLogout}
-                        className="flex items-center gap-3 px-4 py-3 w-full text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title={isCollapsed ? 'Logout' : ''}
+                        className={`flex items-center w-full text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors px-3 py-3 ${isCollapsed ? 'justify-center' : 'gap-3'}`}
                     >
-                        <FiLogOut className="w-5 h-5" />
-                        <span className="font-medium">Logout</span>
+                        <FiLogOut className="w-5 h-5 shrink-0" />
+                        <span className={`whitespace-nowrap overflow-hidden transition-all duration-300 font-medium ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
+                            Logout
+                        </span>
                     </button>
                 </div>
             </aside>
@@ -106,15 +156,38 @@ const Layout = () => {
 
                         <div className="h-8 w-px bg-slate-200 mx-1"></div>
 
-                        <div className="flex items-center gap-3 cursor-pointer p-1.5 rounded-lg hover:bg-slate-50 transition-colors">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#4361ee] to-[#3f37c9] flex items-center justify-center text-white font-semibold text-sm shadow-sm ring-2 ring-white">
-                                {user?.username?.charAt(0).toUpperCase()}
+                        <div className="relative" ref={userMenuRef}>
+                            <div
+                                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                                className="flex items-center gap-3 cursor-pointer p-1.5 rounded-lg hover:bg-slate-50 transition-colors select-none"
+                            >
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#4361ee] to-[#3f37c9] flex items-center justify-center text-white font-semibold text-sm shadow-sm ring-2 ring-white">
+                                    {user?.username?.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="hidden md:block text-left">
+                                    <p className="text-sm font-semibold text-slate-700 leading-none mb-1">{user?.username}</p>
+                                    <p className="text-xs text-slate-500 capitalize leading-none">{user?.role}</p>
+                                </div>
+                                <FiChevronDown className={`hidden md:block w-4 h-4 text-slate-400 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
                             </div>
-                            <div className="hidden md:block text-left">
-                                <p className="text-sm font-semibold text-slate-700 leading-none mb-1">{user?.username}</p>
-                                <p className="text-xs text-slate-500 capitalize leading-none">{user?.role}</p>
-                            </div>
-                            <FiChevronDown className="hidden md:block w-4 h-4 text-slate-400" />
+
+                            {/* Dropdown Menu */}
+                            {userMenuOpen && (
+                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 py-1 animation-fade-in z-50">
+                                    <div className="px-4 py-2 border-b border-slate-50 md:hidden">
+                                        <p className="text-sm font-semibold text-slate-700">{user?.username}</p>
+                                        <p className="text-xs text-slate-500 capitalize">{user?.role}</p>
+                                    </div>
+
+                                    <button
+                                        onClick={handleLogout}
+                                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                    >
+                                        <FiLogOut className="w-4 h-4" />
+                                        Log out
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </header>

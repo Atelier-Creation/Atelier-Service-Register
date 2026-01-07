@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useJobs } from '../context/JobContext';
 import { useAuth } from '../context/AuthContext';
 import Modal from '../components/ui/Modal';
+import { Skeleton } from '../components/ui/Skeleton';
 import CreatableSelect from '../components/ui/CreatableSelect';
 import Select from '../components/ui/Select';
+import api from '../api/client';
 import { FiPlus, FiEdit2, FiTrash2, FiX, FiSave, FiFilter, FiSearch, FiExternalLink, FiCheckSquare } from 'react-icons/fi';
 
 const DEVICE_CATEGORIES = {
@@ -15,13 +17,23 @@ const DEVICE_CATEGORIES = {
 };
 
 const Jobs = () => {
-    const { jobs, addJob, updateJob, deleteJob } = useJobs();
+    const { jobs, addJob, updateJob, deleteJob, loading } = useJobs();
     const { user } = useAuth();
     const [showForm, setShowForm] = useState(false);
     const [editingJob, setEditingJob] = useState(null);
     const [showOutsourceModal, setShowOutsourceModal] = useState(false);
     const [outsourcingJob, setOutsourcingJob] = useState(null);
     const [outsourceData, setOutsourceData] = useState({ name: '', phone: '', cost: '' });
+    const [vendors, setVendors] = useState([]);
+    const costInputRef = useRef(null);
+
+    useEffect(() => {
+        if (showOutsourceModal) {
+            api.get('/vendors')
+                .then(res => setVendors(res.data))
+                .catch(err => console.error('Failed to fetch vendors', err));
+        }
+    }, [showOutsourceModal]);
 
     // Receive Back State
     const [showReceiveModal, setShowReceiveModal] = useState(false);
@@ -29,6 +41,7 @@ const Jobs = () => {
     const [receiveData, setReceiveData] = useState({ status: 'ready', cost: '' });
 
     const [filterStatus, setFilterStatus] = useState('all');
+    const [searchTerm, setSearchTerm] = useState('');
     const [formData, setFormData] = useState({
         customerName: '',
         phone: '',
@@ -53,11 +66,33 @@ const Jobs = () => {
         setShowOutsourceModal(true);
     };
 
-    const submitOutsource = (e) => {
+    const submitOutsource = async (e) => {
         e.preventDefault();
         if (!outsourcingJob) return;
+        if (!outsourceData.name.trim()) {
+            alert('Please select or enter a vendor name');
+            return;
+        }
 
-        updateJob(outsourcingJob.id, {
+        try {
+            // Create or update vendor
+            await api.post('/vendors', {
+                name: outsourceData.name,
+                phone: outsourceData.phone
+            });
+
+            // Refresh vendors list for next time (optional, but good practice)
+            const res = await api.get('/vendors');
+            setVendors(res.data);
+
+        } catch (error) {
+            console.error('Error saving vendor:', error);
+            // Proceed anyway? Or stop? 
+            // Better to proceed so job update isn't blocked by minor vendor save error, 
+            // but ideally we want to know. For now log and proceed.
+        }
+
+        updateJob(outsourcingJob.jobId || outsourcingJob.id, {
             ...outsourcingJob,
             status: 'outsourced',
             outsourced: {
@@ -84,7 +119,7 @@ const Jobs = () => {
         e.preventDefault();
         if (!receivingJob) return;
 
-        updateJob(receivingJob.id, {
+        updateJob(receivingJob.jobId || receivingJob.id, {
             status: receiveData.status,
             outsourced: {
                 ...receivingJob.outsourced,
@@ -103,7 +138,8 @@ const Jobs = () => {
         const submissionData = { ...formData, device: fullDeviceName };
 
         if (editingJob) {
-            updateJob(editingJob.id, submissionData);
+            const idToUpdate = editingJob.jobId || editingJob.id;
+            updateJob(idToUpdate, submissionData);
             setEditingJob(null);
         } else {
             addJob(submissionData);
@@ -122,8 +158,8 @@ const Jobs = () => {
             brand: job.brand || '',
             model: job.model || job.device || '',
             issue: job.issue,
-            receivedDate: job.receivedDate,
-            estimatedDelivery: job.estimatedDelivery,
+            receivedDate: job.receivedDate ? new Date(job.receivedDate).toISOString().split('T')[0] : '',
+            estimatedDelivery: job.estimatedDelivery ? new Date(job.estimatedDelivery).toISOString().split('T')[0] : '',
             technician: job.technician,
             advanceAmount: job.advanceAmount,
             totalAmount: job.totalAmount,
@@ -174,9 +210,17 @@ const Jobs = () => {
         return classes[status] || 'status-received';
     };
 
-    const filteredJobs = filterStatus === 'all'
-        ? jobs
-        : jobs.filter(job => job.status === filterStatus);
+    const filteredJobs = jobs.filter(job => {
+        const matchesStatus = filterStatus === 'all' || job.status === filterStatus;
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch = searchTerm === '' ||
+            (job.jobId || '').toLowerCase().includes(searchLower) ||
+            (job.customerName || '').toLowerCase().includes(searchLower) ||
+            (job.phone || '').includes(searchTerm) ||
+            (job.device || '').toLowerCase().includes(searchLower);
+
+        return matchesStatus && matchesSearch;
+    });
 
     const sortedJobs = [...filteredJobs].sort((a, b) =>
         new Date(b.createdAt) - new Date(a.createdAt)
@@ -212,7 +256,7 @@ const Jobs = () => {
                         <button
                             key={status}
                             onClick={() => setFilterStatus(status)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${filterStatus === status
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all capitalize whitespace-nowrap ${filterStatus === status
                                 ? 'bg-blue-50 text-[#4361ee] ring-1 ring-[#4361ee]/20'
                                 : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
                                 }`}
@@ -229,6 +273,8 @@ const Jobs = () => {
                         type="text"
                         placeholder="Search in orders..."
                         className="input-field !pl-8 py-2 text-sm"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
             </div>
@@ -239,20 +285,20 @@ const Jobs = () => {
                     <table className="w-full">
                         <thead className="bg-slate-50 border-b border-slate-200">
                             <tr>
-                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Order ID</th>
-                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Customer</th>
-                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Device</th>
-                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Delivery</th>
-                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Balance</th>
-                                <th className="text-right py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-800 uppercase tracking-wider">Order ID</th>
+                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-800 uppercase tracking-wider">Customer</th>
+                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-800 uppercase tracking-wider">Device</th>
+                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-800 uppercase tracking-wider">Status</th>
+                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-800 uppercase tracking-wider">Delivery</th>
+                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-800 uppercase tracking-wider">Balance</th>
+                                <th className="text-right py-4 px-6 text-xs font-semibold text-slate-800 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {sortedJobs.map((job) => (
-                                <tr key={job.id} className="hover:bg-slate-50/50 transition-colors">
+                                <tr key={job._id || job.id || job.jobId} className="hover:bg-slate-50/50 transition-colors">
                                     <td className="py-4 px-6">
-                                        <span className="font-mono text-sm font-medium text-slate-700">#{job.id.slice(-6)}</span>
+                                        <span className="font-mono text-sm font-medium text-slate-700">#{(job.jobId || job.id || job._id || '').toString().slice(-6)}</span>
                                     </td>
                                     <td className="py-4 px-6">
                                         <div>
@@ -332,7 +378,7 @@ const Jobs = () => {
                                             )}
                                             {user?.role === 'admin' && (
                                                 <button
-                                                    onClick={() => handleDelete(job.id)}
+                                                    onClick={() => handleDelete(job.jobId || job.id)}
                                                     className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                                     title="Delete Order"
                                                 >
@@ -345,6 +391,25 @@ const Jobs = () => {
                             ))}
                         </tbody>
                     </table>
+
+                    {loading && (
+                        <div className="p-0">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                                <div key={i} className="flex items-center justify-between p-4 border-b border-slate-50">
+                                    <Skeleton className="h-4 w-16" />
+                                    <div className="space-y-2">
+                                        <Skeleton className="h-4 w-32" />
+                                        <Skeleton className="h-3 w-24" />
+                                    </div>
+                                    <Skeleton className="h-4 w-24" />
+                                    <Skeleton className="h-6 w-20 rounded-full" />
+                                    <Skeleton className="h-4 w-24" />
+                                    <Skeleton className="h-4 w-16" />
+                                    <Skeleton className="h-8 w-8 rounded-lg" />
+                                </div>
+                            ))}
+                        </div>
+                    )}
                     {sortedJobs.length === 0 && (
                         <div className="text-center py-16">
                             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -513,14 +578,21 @@ const Jobs = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">3rd Party Name / Shop</label>
-                        <input
-                            type="text"
-                            required
-                            className="input-field"
-                            placeholder="e.g. City Mobile repair"
+                        <CreatableSelect
+                            label="3rd Party Name / Shop"
+                            options={vendors.map(v => v.name)}
                             value={outsourceData.name}
-                            onChange={(e) => setOutsourceData({ ...outsourceData, name: e.target.value })}
+                            onChange={(val) => {
+                                const existing = vendors.find(v => v.name === val);
+                                setOutsourceData({
+                                    ...outsourceData,
+                                    name: val,
+                                    phone: existing ? existing.phone : (outsourceData.phone || '')
+                                });
+                                // Focus subsequent field
+                                setTimeout(() => costInputRef.current?.focus(), 100);
+                            }}
+                            placeholder="Select or Create Vendor"
                         />
                     </div>
 
@@ -540,6 +612,7 @@ const Jobs = () => {
                         <div className="relative">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
                             <input
+                                ref={costInputRef}
                                 type="number"
                                 required
                                 className="input-field !pl-8"
@@ -607,7 +680,7 @@ const Jobs = () => {
                     </div>
                 </form>
             </Modal>
-        </div>
+        </div >
     );
 };
 

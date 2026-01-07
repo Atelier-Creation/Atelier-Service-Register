@@ -1,45 +1,39 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useJobs } from '../context/JobContext';
+import api from '../api/client';
 import { FiTrendingUp, FiTool, FiClock, FiExternalLink, FiCalendar } from 'react-icons/fi';
 import { MdOutlineCurrencyRupee } from 'react-icons/md';
 import Select from '../components/ui/Select';
 import StatCard from '../components/ui/StatCard';
+import { Skeleton } from '../components/ui/Skeleton';
 
 const OutsourceStats = () => {
     const { jobs } = useJobs();
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth()); // 0-11
+    const [technicians, setTechnicians] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // 1. Calculate Stats
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const { data } = await api.get('/jobs/stats/outsource');
+                setTechnicians(data);
+            } catch (error) {
+                console.error("Failed to fetch outsource stats", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchStats();
+    }, []);
+
+    // Monthly Logic (Using Context for immediate time-filtering)
     const outsourcedJobs = jobs.filter(job => job.outsourced && job.outsourced.name);
 
-    // Group by Technician
-    const technicianStats = outsourcedJobs.reduce((acc, job) => {
-        const techName = job.outsourced.name;
-        if (!acc[techName]) {
-            acc[techName] = {
-                name: techName,
-                count: 0,
-                totalCost: 0,
-                lastActive: job.outsourced.date || job.updatedAt,
-                activeJobs: 0
-            };
-        }
-        acc[techName].count += 1;
-        acc[techName].totalCost += parseFloat(job.outsourced.cost || 0);
-        if (new Date(job.outsourced.date) > new Date(acc[techName].lastActive)) {
-            acc[techName].lastActive = job.outsourced.date;
-        }
-        if (job.status === 'outsourced') {
-            acc[techName].activeJobs += 1;
-        }
-        return acc;
-    }, {});
-
-    const technicians = Object.values(technicianStats).sort((a, b) => b.totalCost - a.totalCost);
-
-    const totalSpent = technicians.reduce((sum, tech) => sum + tech.totalCost, 0);
-    const totalOutsourcedCount = outsourcedJobs.length;
-    const currentActiveOutsourced = jobs.filter(job => job.status === 'outsourced').length;
+    // Derived from API Data
+    const totalSpent = technicians.reduce((sum, tech) => sum + (tech.totalCost || 0), 0);
+    const totalOutsourcedCount = technicians.reduce((sum, tech) => sum + (tech.totalJobs || 0), 0);
+    const currentActiveOutsourced = technicians.reduce((sum, tech) => sum + (tech.activeJobs || 0), 0);
 
     // Monthly Logic
     const monthlyJobCount = outsourcedJobs.filter(job => {
@@ -87,7 +81,7 @@ const OutsourceStats = () => {
 
                     <div className="z-10">
                         <h3 className="text-3xl font-bold text-slate-800 mb-1">{monthlyJobCount}</h3>
-                        <p className="text-slate-500 text-sm font-medium">Orders created in {months[selectedMonth]}</p>
+                        <p className="text-slate-500 text-sm font-medium">Outsource Orders in {months[selectedMonth]}</p>
                     </div>
 
                     {/* Hover effect decoration container */}
@@ -98,31 +92,46 @@ const OutsourceStats = () => {
 
                 {/* Total Expenditure */}
                 {/* Total Expenditure */}
-                <StatCard
-                    value={`₹${totalSpent.toLocaleString()}`}
-                    label="Total Expenditure"
-                    icon={MdOutlineCurrencyRupee}
-                    color="bg-purple-100 text-purple-600"
-                    decorationColor="text-purple-600"
-                />
+                {loading ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className="card p-6 flex justify-between items-start">
+                            <div className="space-y-2">
+                                <Skeleton className="h-6 w-24" />
+                                <Skeleton className="h-4 w-32" />
+                            </div>
+                            <Skeleton className="h-10 w-10 rounded-lg" />
+                        </div>
+                    ))
+                ) : (
+                    <>
+                        {/* Total Expenditure */}
+                        <StatCard
+                            value={`₹${totalSpent.toLocaleString()}`}
+                            label="Total Expenditure"
+                            icon={MdOutlineCurrencyRupee}
+                            color="bg-purple-100 text-purple-600"
+                            decorationColor="text-purple-600"
+                        />
 
-                {/* Total Outsourced */}
-                <StatCard
-                    value={totalOutsourcedCount}
-                    label="Total Outsourced Orders"
-                    icon={FiTool}
-                    color="bg-blue-100 text-[#4361ee]"
-                    decorationColor="text-[#4361ee]"
-                />
+                        {/* Total Outsourced */}
+                        <StatCard
+                            value={totalOutsourcedCount}
+                            label="Total Outsourced Orders"
+                            icon={FiTool}
+                            color="bg-blue-100 text-[#4361ee]"
+                            decorationColor="text-[#4361ee]"
+                        />
 
-                {/* Currently Active */}
-                <StatCard
-                    value={currentActiveOutsourced}
-                    label="Currently With 3rd Party"
-                    icon={FiClock}
-                    color="bg-orange-100 text-orange-600"
-                    decorationColor="text-orange-600"
-                />
+                        {/* Currently Active */}
+                        <StatCard
+                            value={currentActiveOutsourced}
+                            label="Currently With 3rd Party"
+                            icon={FiClock}
+                            color="bg-orange-100 text-orange-600"
+                            decorationColor="text-orange-600"
+                        />
+                    </>
+                )}
             </div>
 
             {/* Technician Leaderboard */}
@@ -142,11 +151,21 @@ const OutsourceStats = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                            {technicians.length > 0 ? (
+                            {loading ? (
+                                Array.from({ length: 5 }).map((_, i) => (
+                                    <tr key={i}>
+                                        <td className="py-4 px-6"><Skeleton className="h-4 w-32" /></td>
+                                        <td className="py-4 px-6"><Skeleton className="h-4 w-12" /></td>
+                                        <td className="py-4 px-6"><Skeleton className="h-6 w-20 rounded" /></td>
+                                        <td className="py-4 px-6"><Skeleton className="h-4 w-20" /></td>
+                                        <td className="py-4 px-6"><Skeleton className="h-4 w-24 ml-auto" /></td>
+                                    </tr>
+                                ))
+                            ) : technicians.length > 0 ? (
                                 technicians.map((tech) => (
                                     <tr key={tech.name} className="hover:bg-slate-50/50 transition-colors">
                                         <td className="py-4 px-6 font-medium text-slate-800">{tech.name}</td>
-                                        <td className="py-4 px-6 text-slate-600">{tech.count}</td>
+                                        <td className="py-4 px-6 text-slate-600">{tech.totalJobs}</td>
                                         <td className="py-4 px-6">
                                             {tech.activeJobs > 0 ? (
                                                 <span className="bg-orange-100 text-orange-700 py-1 px-2 rounded text-xs font-bold">

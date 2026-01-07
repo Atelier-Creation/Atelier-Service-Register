@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import api from '../api/client';
 
 const JobContext = createContext(null);
 
@@ -13,95 +14,77 @@ export const useJobs = () => {
 export const JobProvider = ({ children }) => {
     const [jobs, setJobs] = useState([]);
     const [customers, setCustomers] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Load jobs from localStorage
-        const storedJobs = localStorage.getItem('jobs');
-        if (storedJobs) {
+        const fetchData = async () => {
             try {
-                setJobs(JSON.parse(storedJobs));
+                const [jobsRes, customersRes] = await Promise.all([
+                    api.get('/jobs'),
+                    api.get('/customers')
+                ]);
+                setJobs(jobsRes.data);
+                setCustomers(customersRes.data);
             } catch (error) {
-                console.error('Error loading jobs:', error);
+                console.error('Error fetching data:', error);
+            } finally {
+                setLoading(false);
             }
-        }
-
-        // Load customers from localStorage
-        const storedCustomers = localStorage.getItem('customers');
-        if (storedCustomers) {
-            try {
-                setCustomers(JSON.parse(storedCustomers));
-            } catch (error) {
-                console.error('Error loading customers:', error);
-            }
-        }
+        };
+        fetchData();
     }, []);
 
-    const saveJobs = (updatedJobs) => {
-        setJobs(updatedJobs);
-        localStorage.setItem('jobs', JSON.stringify(updatedJobs));
-    };
+    const addJob = async (jobData) => {
+        try {
+            const { data } = await api.post('/jobs', jobData);
+            setJobs(prev => [data, ...prev]);
 
-    const saveCustomers = (updatedCustomers) => {
-        setCustomers(updatedCustomers);
-        localStorage.setItem('customers', JSON.stringify(updatedCustomers));
-    };
+            // Optimistically update or re-fetch customers? 
+            // The backend updates customers automatically. We should probably re-fetch customers or update list if we have the data.
+            // For simplicity, let's re-fetch customers in background or just add if new.
+            // Actually, simply adding the job is enough for the UI for now. To be safe, re-fetch customers:
+            api.get('/customers').then(res => setCustomers(res.data));
 
-    const addJob = (job) => {
-        const newJob = {
-            ...job,
-            id: `JOB${Date.now()}`,
-            createdAt: new Date().toISOString(),
-        };
-
-        const updatedJobs = [...jobs, newJob];
-        saveJobs(updatedJobs);
-
-        // Add customer if new
-        const existingCustomer = customers.find(c => c.phone === job.phone);
-        if (!existingCustomer) {
-            const newCustomer = {
-                id: `CUST${Date.now()}`,
-                name: job.customerName,
-                phone: job.phone,
-                totalJobs: 1,
-                createdAt: new Date().toISOString(),
-            };
-            saveCustomers([...customers, newCustomer]);
-        } else {
-            const updatedCustomers = customers.map(c =>
-                c.phone === job.phone
-                    ? { ...c, totalJobs: (c.totalJobs || 0) + 1 }
-                    : c
-            );
-            saveCustomers(updatedCustomers);
+            return data;
+        } catch (error) {
+            console.error("Error creating job:", error);
+            throw error;
         }
-
-        return newJob;
     };
 
-    const updateJob = (jobId, updates) => {
-        const updatedJobs = jobs.map(job =>
-            job.id === jobId ? { ...job, ...updates, updatedAt: new Date().toISOString() } : job
-        );
-        saveJobs(updatedJobs);
+    const updateJob = async (jobId, updates) => {
+        try {
+            // Optimistic update
+            // setJobs(prev => prev.map(job => job.jobId === jobId ? { ...job, ...updates } : job)); // Be careful with IDs
+
+            const { data } = await api.put(`/jobs/${jobId}`, updates);
+            setJobs(prev => prev.map(job => job.jobId === jobId || job._id === jobId || job.id === jobId ? data : job));
+        } catch (error) {
+            console.error("Error updating job:", error);
+            // Revert?
+        }
     };
 
-    const deleteJob = (jobId) => {
-        const updatedJobs = jobs.filter(job => job.id !== jobId);
-        saveJobs(updatedJobs);
+    const deleteJob = async (jobId) => {
+        try {
+            await api.delete(`/jobs/${jobId}`);
+            setJobs(prev => prev.filter(job => job.jobId !== jobId && job._id !== jobId && job.id !== jobId));
+        } catch (error) {
+            console.error("Error deleting job:", error);
+        }
     };
 
     const getJobById = (jobId) => {
-        return jobs.find(job => job.id === jobId);
+        return jobs.find(job => job.jobId === jobId || job.id === jobId || job._id === jobId);
     };
 
     const searchJobs = (query) => {
         const lowerQuery = query.toLowerCase();
         return jobs.filter(job =>
-            job.id.toLowerCase().includes(lowerQuery) ||
-            job.customerName.toLowerCase().includes(lowerQuery) ||
-            job.phone.includes(query) ||
-            job.device.toLowerCase().includes(lowerQuery)
+            (job.jobId && job.jobId.toLowerCase().includes(lowerQuery)) ||
+            (job.customerName && job.customerName.toLowerCase().includes(lowerQuery)) ||
+            (job.phone && job.phone.includes(query)) ||
+            (job.device && job.device.toLowerCase().includes(lowerQuery))
         );
     };
 
@@ -136,6 +119,7 @@ export const JobProvider = ({ children }) => {
     const value = {
         jobs,
         customers,
+        loading,
         addJob,
         updateJob,
         deleteJob,

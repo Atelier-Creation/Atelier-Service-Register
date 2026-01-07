@@ -23,7 +23,8 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-button,a{
+button,
+a {
   cursor: pointer;
 }
 
@@ -130,4 +131,18 @@ button,a{
 
 .status-delivered {
   @apply bg-purple-50 text-purple-600 border-purple-100;
+}
+
+/* Chart Styles - Remove default focus outlines */
+.recharts-wrapper,
+.recharts-surface,
+.recharts-cartesian-grid-bg,
+.recharts-legend-wrapper {
+  outline: none !important;
+  outline-color: transparent !important;
+}
+
+.recharts-sector {
+  outline: none !important;
+  stroke: none !important;
 }

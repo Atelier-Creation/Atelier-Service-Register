@@ -9,6 +9,7 @@ import Search from './pages/Search';
 import Customers from './pages/Customers';
 import Settings from './pages/Settings';
 import OutsourceStats from './pages/OutsourceStats';
+import Reports from './pages/Reports';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -75,6 +76,7 @@ function AppRoutes() {
         <Route path="3rd-party-stats" element={<OutsourceStats />} />
         <Route path="search" element={<Search />} />
         <Route path="customers" element={<Customers />} />
+        <Route path="reports" element={<Reports />} />
         <Route path="settings" element={<Settings />} />
       </Route>
 

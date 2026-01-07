@@ -13,9 +13,11 @@ const Login = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        console.log('Login Form Data:', formData); // Debug log
         if (formData.username && formData.password) {
             login({
                 username: formData.username,
+                password: formData.password,
                 role: selectedRole,
                 loginTime: new Date().toISOString(),
             });
