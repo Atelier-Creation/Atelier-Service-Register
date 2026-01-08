@@ -55,7 +55,7 @@ const OutsourceStats = () => {
             </div>
 
             {/* Stat Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 min-[425px]:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* Monthly Jobs Card */}
                 {/* Monthly Jobs Card */}
                 <div className="card p-4 h-full flex flex-col justify-between relative group">

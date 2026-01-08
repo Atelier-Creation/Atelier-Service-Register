@@ -1,6 +1,7 @@
 import { useJobs } from '../context/JobContext';
 import { useAuth } from '../context/AuthContext';
-import { FiFileText, FiCalendar, FiUsers, FiBox, FiDollarSign } from 'react-icons/fi';
+import { FiFileText, FiCalendar, FiUsers, FiBox } from 'react-icons/fi';
+import { BsCurrencyRupee } from 'react-icons/bs';
 import { Link } from 'react-router-dom';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -101,7 +102,7 @@ const Dashboard = () => {
             title: 'Total Revenue',
             value: `₹${stats.totalEarnings.toLocaleString()}`,
             label: 'Revenue generated',
-            icon: FiDollarSign,
+            icon: BsCurrencyRupee,
             color: 'bg-amber-100 text-amber-600',
             decorationColor: 'text-amber-600',
         },
@@ -130,7 +131,7 @@ const Dashboard = () => {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 min-[425px]:grid-cols-2 lg:grid-cols-4 gap-6">
                 {jobsLoading ? (
                     // Skeleton for Stat Cards
                     Array.from({ length: 4 }).map((_, i) => (

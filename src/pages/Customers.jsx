@@ -38,10 +38,10 @@ const Customers = () => {
             </div>
 
             {/* Overview Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 min-[425px]:grid-cols-2 md:grid-cols-3 gap-6">
                 {loading ? (
                     Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className={`card p-6 flex justify-between items-center ${i === 2 ? 'col-span-2 md:col-span-1' : ''}`}>
+                        <div key={i} className={`card p-6 flex justify-between items-center ${i === 2 ? 'col-span-1 min-[425px]:col-span-2 md:col-span-1' : ''}`}>
                             <div className="space-y-2">
                                 <Skeleton className="h-4 w-24" />
                                 <Skeleton className="h-8 w-12" />
@@ -69,7 +69,7 @@ const Customers = () => {
                                 <FiFileText className="w-6 h-6" />
                             </div>
                         </div>
-                        <div className="card p-6 flex items-center justify-between col-span-2 md:col-span-1">
+                        <div className="card p-6 flex items-center justify-between col-span-1 min-[425px]:col-span-2 md:col-span-1">
                             <div>
                                 <p className="text-gray-500 text-sm  mb-1">Engagement</p>
                                 <p className="text-3xl font-bold text-gray-800">

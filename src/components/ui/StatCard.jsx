@@ -1,5 +1,30 @@
 import { FiArrowRight } from 'react-icons/fi';
 
+const formatStatValue = (val) => {
+    const strVal = String(val).replace(/,/g, '');
+    const match = strVal.match(/^([^\d-]*)(-?\d*\.?\d+)(.*)$/);
+    if (!match) return val;
+
+    const [, prefix, numStr, suffix] = match;
+    const num = parseFloat(numStr);
+
+    if (isNaN(num)) return val;
+    if (Math.abs(num) < 1000) return val;
+
+    let formattedNum = num;
+    let unit = '';
+
+    if (Math.abs(num) >= 1000000) {
+        formattedNum = (num / 1000000).toFixed(1);
+        unit = 'M';
+    } else {
+        formattedNum = (num / 1000).toFixed(1);
+        unit = 'k';
+    }
+
+    return `${prefix}${formattedNum.replace(/\.0$/, '')}${unit}${suffix}`;
+};
+
 const StatCard = ({
     value,
     label,
@@ -20,7 +45,7 @@ const StatCard = ({
                             <Icon className="w-6 h-6" />
                         )}
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-800">{value}</h3>
+                    <h3 className="text-2xl font-bold text-gray-800">{formatStatValue(value)}</h3>
                 </div>
                 {onClick && (
                     <button
