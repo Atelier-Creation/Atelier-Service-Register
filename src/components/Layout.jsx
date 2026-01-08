@@ -2,10 +2,9 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
     FiHome, FiFileText, FiSearch, FiUsers, FiSettings,
-    FiLogOut, FiMenu, FiX, FiBell, FiChevronDown, FiTrendingUp,
+    FiLogOut, FiMenu, FiX, FiTool , FiChevronDown, FiTrendingUp,
     FiChevronLeft, FiChevronRight,
 } from 'react-icons/fi';
-import { HiOutlineWrenchScrewdriver } from "react-icons/hi2";
 import { useState, useRef, useEffect } from 'react';
 
 const Layout = () => {
@@ -39,7 +38,7 @@ const Layout = () => {
     const menuItems = [
         { path: '/', icon: FiHome, label: 'Dashboard' },
         { path: '/jobs', icon: FiFileText, label: 'Orders' },
-        { path: '/3rd-party-stats', icon: HiOutlineWrenchScrewdriver, label: 'Out Source' },
+        { path: '/3rd-party-stats', icon: FiTool , label: 'Out Source' },
         { path: '/customers', icon: FiUsers, label: 'Customers' },
         ...(user?.role === 'admin' ? [
             { path: '/reports', icon: FiTrendingUp, label: 'Reports' },
