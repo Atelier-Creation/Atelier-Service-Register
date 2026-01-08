@@ -14,6 +14,8 @@ const Layout = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [showMobileSearch, setShowMobileSearch] = useState(false);
     const userMenuRef = useRef(null);
 
     useEffect(() => {
@@ -141,40 +143,50 @@ const Layout = () => {
             {/* Main Content Wrapper */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 {/* Top Header */}
-                <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 lg:px-8">
+                <header className="relative h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 lg:px-8">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => setSidebarOpen(true)}
                             className="lg:hidden text-gray-500 hover:text-gray-700"
                         >
                             <FiMenu className="w-6 h-6" />
-                        </button>   
+                        </button>
 
                         {/* Global Search */}
                         <div className="hidden md:flex items-center relative w-96">
                             <FiSearch className="absolute left-3 text-gray-400 w-5 h-5" />
                             <input
                                 type="text"
-                                placeholder="Search jobs, customers..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && searchTerm.trim()) {
+                                        navigate(`/jobs?search=${encodeURIComponent(searchTerm)}&filter=all`);
+                                    }
+                                }}
+                                placeholder="Search jobs, customers, Device..."
                                 className="w-full bg-gray-50 border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:outline-0 focus:ring-blue-400 text-gray-600 placeholder-gray-400"
                             />
                             {/* <span className="absolute right-3 text-xs text-gray-400 border border-gray-200 rounded px-1.5 py-0.5">⌘K</span> */}
                         </div>
                     </div>
 
-                    {/* Mobile Logo */}
-                        <div className="lg:hidden mx-auto flex items-center gap-2">
-                            <img src="/favicon.png" alt="Logo" className='h-8 w-8 object-contain' />
-                            <div className="">
-                                <h1 className="font-bold text-gray-800 text-base text-lg">Registra</h1>
-                            </div>
+                    {/* Mobile Logo - Centered Absolutely */}
+                    <div className="lg:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2">
+                        <img src="/favicon.png" alt="Logo" className='h-8 w-8 object-contain' />
+                        <div className="">
+                            <h1 className="font-bold text-gray-800 text-base text-lg">Registra</h1>
                         </div>
+                    </div>
 
-                    <div className="flex items-center gap-4">
-                        {/* <button className="relative p-2 text-gray-400 hover:text-[#4361ee] hover:bg-blue-50 rounded-full transition-colors">
-                            <FiBell className="w-5 h-5" />
-                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-                        </button> */}
+                    <div className="flex items-center gap-3">
+                        {/* Mobile Search Toggle */}
+                        <button
+                            onClick={() => setShowMobileSearch(true)}
+                            className="md:hidden p-2 text-gray-500 hover:text-gray-700"
+                        >
+                            <FiSearch className="w-6 h-6" />
+                        </button>
 
                         <div className="h-8 w-px bg-gray-200 mx-1 hidden lg:block"></div>
 
@@ -213,6 +225,44 @@ const Layout = () => {
                         </div>
                     </div>
                 </header>
+
+                {/* Mobile Search Overlay */}
+                {showMobileSearch && (
+                    <div className="fixed inset-0 z-[60] bg-white animate-fade-in md:hidden">
+                        <div className="flex items-center gap-2 p-4 border-b border-gray-100">
+                            <div className="relative flex-1">
+                                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                                <input
+                                    type="text"
+                                    autoFocus
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && searchTerm.trim()) {
+                                            setShowMobileSearch(false);
+                                            navigate(`/jobs?search=${encodeURIComponent(searchTerm)}&filter=all`);
+                                        }
+                                    }}
+                                    placeholder="Search..."
+                                    className="w-full bg-gray-50 border-none rounded-lg py-2.5 pl-10 pr-4 text-base focus:ring-2 focus:outline-0 focus:ring-blue-400 text-gray-800 placeholder-gray-400"
+                                />
+                            </div>
+                            <button
+                                onClick={() => setShowMobileSearch(false)}
+                                className="p-2 text-gray-500 font-medium"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                        <div className="p-4">
+                            <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-3">Quick Actions</p>
+                            <div className="flex flex-wrap gap-2">
+                                <button onClick={() => { setSearchTerm('Apple'); setShowMobileSearch(false); navigate('/jobs?search=Apple&filter=all'); }} className="px-3 py-1.5 bg-gray-50 text-gray-600 rounded-lg text-sm">Apple Devices</button>
+                                <button onClick={() => { setSearchTerm('Pending'); setShowMobileSearch(false); navigate('/jobs?search=Pending&filter=all'); }} className="px-3 py-1.5 bg-gray-50 text-gray-600 rounded-lg text-sm">Pending Jobs</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Scrollable Content */}
                 <main className="flex-1 overflow-y-auto p-4 lg:p-8">

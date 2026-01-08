@@ -1,18 +1,30 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useJobs } from '../context/JobContext';
+import { useSearchParams, Link } from 'react-router-dom';
 import { FiSearch, FiPhone, FiUser, FiFileText, FiClock } from 'react-icons/fi';
 
 const Search = () => {
     const { searchJobs } = useJobs();
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const queryParam = searchParams.get('q') || '';
+
+    const [searchQuery, setSearchQuery] = useState(queryParam);
     const [searchResults, setSearchResults] = useState([]);
     const [searchType, setSearchType] = useState('all');
+
+    useEffect(() => {
+        if (queryParam) {
+            setSearchQuery(queryParam);
+            const results = searchJobs(queryParam);
+            setSearchResults(results);
+        }
+    }, [queryParam, searchJobs]);
 
     const handleSearch = (e) => {
         e.preventDefault();
         if (searchQuery.trim()) {
-            const results = searchJobs(searchQuery);
-            setSearchResults(results);
+            setSearchParams({ q: searchQuery }); // Update URL
+            // The useEffect will trigger the search
         }
     };
 
@@ -52,8 +64,8 @@ const Search = () => {
                                     type="button"
                                     onClick={() => setSearchType(type.value)}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${searchType === type.value
-                                            ? 'bg-[#4361ee] text-white shadow-md shadow-blue-200'
-                                            : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                                        ? 'bg-[#4361ee] text-white shadow-md shadow-blue-200'
+                                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
                                         }`}
                                 >
                                     <Icon className="w-4 h-4" />
@@ -90,11 +102,15 @@ const Search = () => {
                         <h3 className="font-semibold text-gray-700">Found {searchResults.length} results</h3>
                     </div>
                     {searchResults.map((job) => (
-                        <div key={job.id} className="card p-6 flex flex-col sm:flex-row gap-6 hover:border-blue-200 transition-colors">
+                        <Link
+                            to={`/jobs?view=${job.jobId || job.id || job._id}`}
+                            key={job.id}
+                            className="card p-6 flex flex-col sm:flex-row gap-6 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer block"
+                        >
                             <div className="flex-1 space-y-3">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <span className="bg-gray-100 text-gray-600 font-mono text-xs px-2 py-1 rounded">#{job.id}</span>
+                                        <span className="bg-gray-100 text-gray-600 font-mono text-xs px-2 py-1 rounded">#{job.jobId || job.id}</span>
                                         <h3 className="font-bold text-gray-800 text-lg">{job.customerName}</h3>
                                     </div>
                                     <span className={`status-badge ${getStatusClass(job.status)}`}>
@@ -131,7 +147,7 @@ const Search = () => {
                                     <p className="text-gray-600 font-medium">₹{parseFloat(job.totalAmount).toLocaleString()}</p>
                                 </div>
                             </div>
-                        </div>
+                        </Link>
                     ))}
                 </div>
             ) : searchQuery && (

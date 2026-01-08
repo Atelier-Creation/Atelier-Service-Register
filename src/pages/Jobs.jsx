@@ -34,10 +34,16 @@ const Jobs = () => {
             navigate('/jobs', { replace: true });
         }
 
-        // Handle search query from Customers page
+        // Handle search query
         const searchParam = searchParams.get('search');
         if (searchParam) {
             setSearchTerm(searchParam);
+        }
+
+        // Handle filter param
+        const filterParam = searchParams.get('filter');
+        if (filterParam) {
+            setFilterStatus(filterParam);
         }
 
         // Handle 'View Job' action
