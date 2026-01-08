@@ -78,6 +78,9 @@ const Jobs = () => {
         finalAmount: ''
     });
 
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deletingJobId, setDeletingJobId] = useState(null);
+
     const handlePayment = (job) => {
         const balance = (parseFloat(job.totalAmount) || 0) - (parseFloat(job.advanceAmount) || 0);
         setPaymentJob(job);
@@ -265,9 +268,16 @@ const Jobs = () => {
         setShowForm(true);
     };
 
-    const handleDelete = (jobId) => {
-        if (window.confirm('Are you sure you want to delete this order?')) {
-            deleteJob(jobId);
+    const handleDelete = (id) => {
+        setDeletingJobId(id);
+        setShowDeleteModal(true);
+    };
+
+    const confirmDelete = async () => {
+        if (deletingJobId) {
+            await deleteJob(deletingJobId);
+            setShowDeleteModal(false);
+            setDeletingJobId(null);
         }
     };
 
@@ -454,7 +464,7 @@ const Jobs = () => {
                                             {['admin', 'technician'].includes(user?.role) && (
                                                 <button
                                                     onClick={() => { setViewJob(job); setShowViewModal(true); }}
-                                                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                    className="p-2 bg-white text-gray-400 hover:text-[#4361ee] hover:shadow-md rounded-lg shadow-sm border border-gray-100 transition-all"
                                                     title="View Details"
                                                 >
                                                     <FiEye className="w-4 h-4" />
@@ -463,7 +473,7 @@ const Jobs = () => {
                                             {['admin', 'technician'].includes(user?.role) && (
                                                 <button
                                                     onClick={() => handleEdit(job)}
-                                                    className="p-2 text-gray-400 hover:text-[#4361ee] hover:bg-blue-50 rounded-lg transition-colors"
+                                                    className="p-2 bg-white text-gray-400 hover:text-[#4361ee] hover:shadow-md rounded-lg shadow-sm border border-gray-100 transition-all"
                                                     title="Edit / Update Status"
                                                 >
                                                     <FiEdit2 className="w-4 h-4" />
@@ -473,7 +483,7 @@ const Jobs = () => {
                                                 job.status === 'outsourced' ? (
                                                     <button
                                                         onClick={() => handleReceiveBack(job)}
-                                                        className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                                        className="p-2 bg-white text-gray-400 hover:text-emerald-600 hover:shadow-md rounded-lg shadow-sm border border-gray-100 transition-all"
                                                         title="Receive Back from 3rd Party"
                                                     >
                                                         <FiCheckSquare className="w-4 h-4" />
@@ -481,7 +491,7 @@ const Jobs = () => {
                                                 ) : (
                                                     <button
                                                         onClick={() => handleOutsource(job)}
-                                                        className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                                        className="p-2 bg-white text-gray-400 hover:text-purple-600 hover:shadow-md rounded-lg shadow-sm border border-gray-100 transition-all"
                                                         title="Assign to 3rd Party"
                                                     >
                                                         <FiExternalLink className="w-4 h-4" />
@@ -492,7 +502,7 @@ const Jobs = () => {
                                             {['admin', 'technician'].includes(user?.role) && job.status !== 'delivered' && job.status !== 'outsourced' && (
                                                 <button
                                                     onClick={() => handlePayment(job)}
-                                                    className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                                    className="p-2 bg-white text-gray-400 hover:text-emerald-600 hover:shadow-md rounded-lg shadow-sm border border-gray-100 transition-all"
                                                     title="Get Payment / Deliver"
                                                 >
                                                     <BiRupee className="w-4 h-4" />
@@ -501,7 +511,7 @@ const Jobs = () => {
                                             {user?.role === 'admin' && (
                                                 <button
                                                     onClick={() => handleDelete(job.jobId || job.id)}
-                                                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                    className="p-2 bg-white text-gray-400 hover:text-red-500 hover:shadow-md rounded-lg shadow-sm border border-gray-100 transition-all"
                                                     title="Delete Order"
                                                 >
                                                     <FiTrash2 className="w-4 h-4" />
@@ -988,7 +998,35 @@ const Jobs = () => {
                     </div>
                 )}
             </Modal>
-        </div >
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                title="Confirm Deletion"
+            >
+                <div className="space-y-4">
+                    <p className="text-gray-600">
+                        Are you sure you want to delete this order? This action cannot be undone.
+                    </p>
+                    <div className="flex justify-end gap-3 pt-4">
+                        <button
+                            onClick={() => setShowDeleteModal(false)}
+                            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors text-sm font-medium"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={confirmDelete}
+                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-sm text-sm font-medium flex items-center gap-2"
+                        >
+                            <FiTrash2 className="w-4 h-4" />
+                            Delete Permanently
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+        </div>
     );
 };
 

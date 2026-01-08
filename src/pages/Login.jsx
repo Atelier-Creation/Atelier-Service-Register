@@ -66,27 +66,43 @@ const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [selectedRole, setSelectedRole] = useState('admin');
 
-    const handleSubmit = (e) => {
+    const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Login Form Data:', formData); // Debug log
+        setError('');
+
         if (formData.username && formData.password) {
-            login({
-                username: formData.username,
-                password: formData.password,
-                role: selectedRole,
-                loginTime: new Date().toISOString(),
-            });
+            setIsLoading(true);
+            try {
+                const res = await login({
+                    username: formData.username,
+                    password: formData.password,
+                    role: selectedRole,
+                    loginTime: new Date().toISOString(),
+                });
+
+                if (!res.success) {
+                    setError(res.message || "Invalid username or password");
+                    setIsLoading(false);
+                }
+            } catch (err) {
+                setError("Something went wrong. Please try again.");
+                setIsLoading(false);
+            }
         }
     };
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+        if (error) setError('');
     };
 
     return (
         <div className="min-h-screen bg-gray-200 flex items-center justify-center p-4 relative overflow-hidden">
-
-            {/* Animated Background */}
+            
+            {/* ... Background Code ... */}
             <div className="absolute inset-0 flex gap-6 justify-center opacity-40 select-none pointer-events-none -skew-y-6 scale-110">
                 <FloatingColumn speed={40} className="flex flex-col gap-6 w-64">
                     {[1, 2, 3, 4, 5].map(i => <BackgroundCard key={i} index={i} />)}
@@ -106,7 +122,6 @@ const Login = () => {
             <div className="absolute inset-0 bg-gradient-to-t from-gray-50 via-gray-50/80 to-transparent pointer-events-none" />
 
             <div className="max-w-md w-full bg-white/80 backdrop-blur-md rounded-2xl shadow-2xl p-8 border border-white/50 relative z-10">
-
                 {/* Logo & Header */}
                 <div className="text-center mb-8">
                     <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-50">
@@ -139,6 +154,14 @@ const Login = () => {
                         Technician
                     </button>
                 </div>
+
+                {/* Error Message */}
+                {error && (
+                    <div className="mb-4 p-3 bg-red-50 border border-red-100 text-red-600 text-sm rounded-lg flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-red-500 rounded-full shrink-0" />
+                        {error}
+                    </div>
+                )}
 
                 {/* Login Form */}
                 <form onSubmit={handleSubmit} className="space-y-5">
@@ -181,8 +204,17 @@ const Login = () => {
                         </div>
                     </div>
 
-                    <button type="submit" className="w-full btn-primary py-3 text-lg shadow-lg shadow-blue-200/50">
-                        Sign In
+                    <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full btn-primary py-3 text-lg shadow-lg shadow-blue-200/50 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                        {isLoading ? (
+                            <>
+                                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                Signing in...
+                            </>
+                        ) : 'Sign In'}
                     </button>
                 </form>
 
