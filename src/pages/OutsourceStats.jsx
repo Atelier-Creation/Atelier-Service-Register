@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useJobs } from '../context/JobContext';
 import api from '../api/client';
-import { FiTrendingUp, FiTool, FiClock, FiExternalLink, FiCalendar } from 'react-icons/fi';
-import { MdOutlineCurrencyRupee } from 'react-icons/md';
+import { FiClock } from 'react-icons/fi';
 import Select from '../components/ui/Select';
 import StatCard from '../components/ui/StatCard';
 import { Skeleton } from '../components/ui/Skeleton';
@@ -57,40 +56,36 @@ const OutsourceStats = () => {
             {/* Stat Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* Monthly Jobs Card */}
-                <div className="card p-6 h-40 flex flex-col justify-between relative overflow-visible group">
-                    <div className="flex justify-between items-start z-20">
-                        <div className="p-3 rounded-xl bg-indigo-100 text-indigo-600">
-                            <FiCalendar className="w-6 h-6" />
+                {/* Monthly Jobs Card */}
+                <div className="card p-4 flex flex-col justify-between relative overflow-hidden group">
+                    <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-3 z-10">
+                            <div className="rounded-xl">
+                                <img src='/calendar.gif' alt="calendar" className="w-12 h-12 object-contain" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-slate-800">{monthlyJobCount}</h3>
                         </div>
-                        <div className="w-30">
+                    </div>
+
+                    <div className="z-10 mt-2 flex items-center justify-between">
+                        <p className="text-slate-500 text-sm font-medium">Outsource in</p>
+                        <div className="w-28">
                             <Select
                                 value={selectedMonth}
                                 onChange={(val) => setSelectedMonth(val)}
                                 options={months.map((m, i) => ({ label: m, value: i }))}
-                                triggerClassName="
-    border-none bg-transparent shadow-none p-0 h-auto justify-end gap-2
-    text-slate-500 hover:text-indigo-600
-    focus:outline-none focus:ring-0 focus:ring-offset-0
-    focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0
-  "
-                                className="min-w-[100px]"
+                                triggerClassName="border-none bg-transparent shadow-none p-0 h-auto justify-end gap-2 text-slate-500 hover:text-indigo-600 focus:ring-0 text-sm"
+                                className="min-w-[80px]"
                             />
-
                         </div>
-                    </div>
-
-                    <div className="z-10">
-                        <h3 className="text-3xl font-bold text-slate-800 mb-1">{monthlyJobCount}</h3>
-                        <p className="text-slate-500 text-sm font-medium">Outsource Orders in {months[selectedMonth]}</p>
                     </div>
 
                     {/* Hover effect decoration container */}
                     <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
-                        <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-indigo-600 opacity-[0.03] rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+                        <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-indigo-600 opacity-[0.03] rounded-full group-hover:scale-125 transition-transform duration-700"></div>
                     </div>
                 </div>
 
-                {/* Total Expenditure */}
                 {/* Total Expenditure */}
                 {loading ? (
                     Array.from({ length: 3 }).map((_, i) => (
@@ -108,7 +103,7 @@ const OutsourceStats = () => {
                         <StatCard
                             value={`₹${totalSpent.toLocaleString()}`}
                             label="Total Expenditure"
-                            icon={MdOutlineCurrencyRupee}
+                            icon="/rupee.gif"
                             color="bg-purple-100 text-purple-600"
                             decorationColor="text-purple-600"
                         />
@@ -117,7 +112,7 @@ const OutsourceStats = () => {
                         <StatCard
                             value={totalOutsourcedCount}
                             label="Total Outsourced Orders"
-                            icon={FiTool}
+                            icon="/totalorders.gif"
                             color="bg-blue-100 text-[#4361ee]"
                             decorationColor="text-[#4361ee]"
                         />
@@ -126,7 +121,7 @@ const OutsourceStats = () => {
                         <StatCard
                             value={currentActiveOutsourced}
                             label="Currently With 3rd Party"
-                            icon={FiClock}
+                            icon="service.gif"
                             color="bg-orange-100 text-orange-600"
                             decorationColor="text-orange-600"
                         />

@@ -1,6 +1,61 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { FiUser, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+
+// Mock UI Components for Background
+const BackgroundCard = ({ className, index = 1 }) => {
+    // Deterministic content based on index for seamless looping
+    const isEven = index % 2 === 0;
+    const price = 1000 + (index * 153) % 4000;
+    const orderId = 1000 + (index * 79) % 9000;
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 0.6, y: 0 }}
+            transition={{ delay: (index % 5) * 0.1, duration: 0.8 }}
+            className={`bg-white rounded-xl shadow-sm border border-slate-200/60 p-4 ${className} flex flex-col justify-between`}
+        >
+            <div className="flex justify-between items-start mb-2">
+                <div className="flex gap-3">
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isEven ? 'bg-blue-50 text-blue-500' : 'bg-purple-50 text-purple-500'}`}>
+                        <div className="w-5 h-5 rounded-md bg-current opacity-20" />
+                    </div>
+                    <div>
+                        <div className="font-semibold text-slate-700 text-sm">Order #{orderId}</div>
+                        <div className="text-xs text-slate-400">Fixed Display</div>
+                    </div>
+                </div>
+                <span className="text-xs font-bold text-slate-700">₹{price}</span>
+            </div>
+
+            <div className="flex gap-2 mt-2">
+                <span className={`text-[10px] px-2 py-1 rounded-full font-medium ${isEven ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                    {isEven ? 'Delivered' : 'In Progress'}
+                </span>
+            </div>
+        </motion.div>
+    );
+};
+
+const FloatingColumn = ({ speed = 20, children, className }) => (
+    <motion.div
+        animate={{ y: [0, "-50%"] }}
+        transition={{
+            duration: speed,
+            ease: "linear",
+            repeat: Infinity,
+            repeatType: "loop"
+        }}
+        style={{ willChange: "transform" }}
+        className={className}
+    >
+        {children}
+        {children}
+    </motion.div>
+);
 
 const Login = () => {
     const { login } = useAuth();
@@ -29,27 +84,44 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-            <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
+        <div className="min-h-screen bg-gray-200 flex items-center justify-center p-4 relative overflow-hidden">
+
+            {/* Animated Background */}
+            <div className="absolute inset-0 flex gap-6 justify-center opacity-40 select-none pointer-events-none -skew-y-6 scale-110">
+                <FloatingColumn speed={40} className="flex flex-col gap-6 w-64">
+                    {[1, 2, 3, 4, 5].map(i => <BackgroundCard key={i} index={i} />)}
+                </FloatingColumn>
+                <FloatingColumn speed={55} className="flex flex-col gap-6 w-64 pt-20">
+                    {[1, 2, 3, 4, 5].map(i => <BackgroundCard key={i} index={i + 10} className="h-40" />)}
+                </FloatingColumn>
+                <FloatingColumn speed={45} className="flex flex-col gap-6 w-64">
+                    {[1, 2, 3, 4, 5].map(i => <BackgroundCard key={i} index={i + 20} />)}
+                </FloatingColumn>
+                <FloatingColumn speed={60} className="flex flex-col gap-6 w-64 pt-32 hidden md:flex">
+                    {[1, 2, 3, 4, 5].map(i => <BackgroundCard key={i} index={i + 30} className="h-32" />)}
+                </FloatingColumn>
+            </div>
+
+            {/* Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-slate-50/80 to-transparent pointer-events-none" />
+
+            <div className="max-w-md w-full bg-white/80 backdrop-blur-md rounded-2xl shadow-2xl p-8 border border-white/50 relative z-10">
 
                 {/* Logo & Header */}
                 <div className="text-center mb-8">
                     <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-50">
-                        {/* <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg> */}
-                        <img src="/favicon.png" alt="Atelier logo" srcset="/favicon.png" className="object-cover" />
+                        <img src="/favicon.png" alt="Atelier logo" srcSet="/favicon.png" className="object-cover" />
                     </div>
                     <h1 className="text-2xl font-bold text-slate-800">Welcome Back</h1>
                     <p className="text-slate-500 text-sm mt-1">Sign in to your account</p>
                 </div>
 
                 {/* Role Toggle */}
-                <div className="bg-slate-50 p-1 rounded-lg flex mb-6 border border-slate-100">
+                <div className="bg-slate-100/50 p-1 rounded-lg flex mb-6 border border-slate-200/50">
                     <button
                         type="button"
                         onClick={() => setSelectedRole('admin')}
-                        className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${selectedRole === 'admin'
+                        className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${selectedRole === 'admin'
                             ? 'bg-white text-[#4361ee] shadow-sm'
                             : 'text-slate-500 hover:text-slate-700'
                             }`}
@@ -59,7 +131,7 @@ const Login = () => {
                     <button
                         type="button"
                         onClick={() => setSelectedRole('technician')}
-                        className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${selectedRole === 'technician'
+                        className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${selectedRole === 'technician'
                             ? 'bg-white text-[#4361ee] shadow-sm'
                             : 'text-slate-500 hover:text-slate-700'
                             }`}
@@ -79,7 +151,7 @@ const Login = () => {
                                 name="username"
                                 value={formData.username}
                                 onChange={handleChange}
-                                className="input-field !pl-10"
+                                className="input-field !pl-10 bg-white/50 focus:bg-white transition-colors"
                                 placeholder="Enter your username"
                                 required
                             />
@@ -95,7 +167,7 @@ const Login = () => {
                                 name="password"
                                 value={formData.password}
                                 onChange={handleChange}
-                                className="input-field !pl-10 !pr-10"
+                                className="input-field !pl-10 !pr-10 bg-white/50 focus:bg-white transition-colors"
                                 placeholder="••••••••"
                                 required
                             />
@@ -109,15 +181,15 @@ const Login = () => {
                         </div>
                     </div>
 
-                    <button type="submit" className="w-full btn-primary py-3 text-lg shadow-lg shadow-blue-200">
+                    <button type="submit" className="w-full btn-primary py-3 text-lg shadow-lg shadow-blue-200/50">
                         Sign In
                     </button>
                 </form>
 
-                <div className="mt-8 pt-6 border-t border-slate-100 text-center">
+                <div className="mt-4 pt-4 border-t border-slate-200/50 text-center">
                     <p className="text-xs text-slate-400">
-                        Demo Credentials:
-                        <span className="font-medium text-slate-600 ml-1">admin / admin</span>
+                        Application Developed and maintained by
+                        <Link to={"https://ateliertechnologysolutions.com/"} target='_blank' className="font-medium text-slate-600 ml-1 mt-1 block">Atelier Technology Solutions</Link>
                     </p>
                 </div>
             </div>

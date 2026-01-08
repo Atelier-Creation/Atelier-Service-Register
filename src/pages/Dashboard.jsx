@@ -1,6 +1,6 @@
 import { useJobs } from '../context/JobContext';
 import { useAuth } from '../context/AuthContext';
-import { FiArrowRight, FiFileText, FiUsers, FiBox, FiDollarSign, FiCalendar } from 'react-icons/fi';
+import { FiFileText, FiCalendar } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -77,7 +77,7 @@ const Dashboard = () => {
             title: 'Total Orders',
             value: stats.total,
             label: 'Number of orders',
-            icon: FiFileText,
+            icon: '/totalorders.gif',
             color: 'bg-blue-100 text-blue-600',
             decorationColor: 'text-blue-600',
         },
@@ -85,7 +85,7 @@ const Dashboard = () => {
             title: 'Active Customers',
             value: stats.total || 0, // Placeholder
             label: 'Registered customers',
-            icon: FiUsers,
+            icon: '/coustomers.gif',
             color: 'bg-indigo-100 text-indigo-600',
             decorationColor: 'text-indigo-600',
         },
@@ -93,7 +93,7 @@ const Dashboard = () => {
             title: 'Ready to Deliver',
             value: stats.statusCounts?.ready || 0,
             label: 'Available for pickup',
-            icon: FiBox,
+            icon: '/avilableforpickup.gif',
             color: 'bg-emerald-100 text-emerald-600',
             decorationColor: 'text-emerald-600',
         },
@@ -101,7 +101,7 @@ const Dashboard = () => {
             title: 'Total Revenue',
             value: `₹${stats.totalEarnings.toLocaleString()}`,
             label: 'Revenue generated',
-            icon: FiDollarSign,
+            icon: '/totalrevenue.gif',
             color: 'bg-amber-100 text-amber-600',
             decorationColor: 'text-amber-600',
         },
@@ -118,13 +118,14 @@ const Dashboard = () => {
                     </p>
                 </div>
                 <div className="flex gap-3">
-                    <Link to="/jobs" className="btn-primary flex items-center gap-2">
+                    <Link to="/jobs?action=new" className="btn-primary flex items-center gap-2">
                         <FiFileText />
                         New Order
                     </Link>
-                    <Link to="/reports" className="btn-secondary">
-                        View Reports
-                    </Link>
+                    {user?.role === 'admin' && (
+                        <Link to="/reports" className="btn-secondary">
+                            View Reports
+                        </Link>)}
                 </div>
             </div>
 
@@ -153,32 +154,33 @@ const Dashboard = () => {
                                 />
                             ))}
 
-                        {/* Monthly Jobs Card (For Technicians) */}
                         {user?.role === 'technician' && (
-                            <div className="card p-6 h-40 flex flex-col justify-between relative overflow-visible group">
-                                <div className="flex justify-between items-start z-20">
-                                    <div className="p-3 rounded-xl bg-indigo-100 text-indigo-600">
-                                        <FiCalendar className="w-6 h-6" />
+                            <div className="card p-4 flex flex-col justify-between relative overflow-hidden group">
+                                <div className="flex justify-between items-start">
+                                    <div className="flex items-center gap-3 z-10">
+                                        <div className="rounded-xl">
+                                            <img src='/calendar.gif' alt="calendar" className="w-12 h-12 object-contain" />
+                                        </div>
+                                        <h3 className="text-2xl font-bold text-slate-800">{monthlyJobCount}</h3>
                                     </div>
-                                    <div className="w-32">
+                                </div>
+
+                                <div className="z-10 mt-2 flex items-center justify-between">
+                                    <p className="text-slate-500 text-sm font-medium">Orders in</p>
+                                    <div className="w-28">
                                         <Select
                                             value={selectedMonth}
                                             onChange={(val) => setSelectedMonth(val)}
                                             options={months.map((m, i) => ({ label: m, value: i }))}
-                                            triggerClassName="border-none bg-transparent shadow-none p-0 h-auto justify-end gap-2 text-slate-500 hover:text-indigo-600 focus:ring-0"
-                                            className="min-w-[100px]"
+                                            triggerClassName="border-none bg-transparent shadow-none p-0 h-auto justify-end gap-2 text-slate-500 hover:text-indigo-600 focus:ring-0 text-sm"
+                                            className="min-w-[80px]"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="z-10">
-                                    <h3 className="text-3xl font-bold text-slate-800 mb-1">{monthlyJobCount}</h3>
-                                    <p className="text-slate-500 text-sm font-medium">Orders created in {months[selectedMonth]}</p>
-                                </div>
-
                                 {/* Hover effect decoration container */}
                                 <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
-                                    <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-indigo-600 opacity-[0.03] rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+                                    <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-indigo-600 opacity-[0.03] rounded-full group-hover:scale-125 transition-transform duration-700"></div>
                                 </div>
                             </div>
                         )}
@@ -316,7 +318,9 @@ const Dashboard = () => {
                             {/* Center Label */}
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-8">
                                 <div className="text-center">
-                                    <p className="text-2xl font-bold text-slate-800">1.2k</p>
+                                    <p className="text-2xl font-bold text-slate-800">
+                                        {pieData.reduce((sum, item) => sum + (item.value || 0), 0)}
+                                    </p>
                                     <p className="text-xs text-slate-400">Total Items</p>
                                 </div>
                             </div>

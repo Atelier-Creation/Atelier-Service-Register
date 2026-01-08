@@ -3,8 +3,9 @@ import { useAuth } from '../context/AuthContext';
 import {
     FiHome, FiFileText, FiSearch, FiUsers, FiSettings,
     FiLogOut, FiMenu, FiX, FiBell, FiChevronDown, FiTrendingUp,
-    FiChevronLeft, FiChevronRight
+    FiChevronLeft, FiChevronRight,
 } from 'react-icons/fi';
+import { HiOutlineWrenchScrewdriver } from "react-icons/hi2";
 import { useState, useRef, useEffect } from 'react';
 
 const Layout = () => {
@@ -38,7 +39,7 @@ const Layout = () => {
     const menuItems = [
         { path: '/', icon: FiHome, label: 'Dashboard' },
         { path: '/jobs', icon: FiFileText, label: 'Orders' },
-        { path: '/3rd-party-stats', icon: FiFileText, label: 'Out Source' },
+        { path: '/3rd-party-stats', icon: HiOutlineWrenchScrewdriver, label: 'Out Source' },
         { path: '/customers', icon: FiUsers, label: 'Customers' },
         ...(user?.role === 'admin' ? [
             { path: '/reports', icon: FiTrendingUp, label: 'Reports' },
@@ -60,11 +61,11 @@ const Layout = () => {
                 {/* Logo */}
                 <div className={`h-16 flex items-center border-b border-slate-100 relative transition-all duration-300 ${isCollapsed ? 'justify-center px-0' : 'px-6'}`}>
                     <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
-                        <img src="/Dark_Logo.png" alt="Logo" className='h-6 w-6 object-contain' />
+                        <img src="/favicon.png" alt="Logo" className='h-6 w-6 object-contain' />
                     </div>
                     <div className={`ml-3 overflow-hidden transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
-                        <h1 className="font-bold text-slate-800 text-lg leading-tight">Atelier</h1>
-                        <p className="text-xs text-slate-400 font-medium">Service Register</p>
+                        <h1 className="font-bold text-slate-800 text-lg leading-tight">Registra</h1>
+                        <p className="text-xs text-slate-400 font-medium">by Atelier </p>
                     </div>
 
                     {/* Desktop Toggle Button - Positioned on the border */}

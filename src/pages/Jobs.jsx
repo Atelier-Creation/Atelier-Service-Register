@@ -1,12 +1,14 @@
 import { useEffect, useState, useRef } from 'react';
 import { useJobs } from '../context/JobContext';
 import { useAuth } from '../context/AuthContext';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Modal from '../components/ui/Modal';
 import { Skeleton } from '../components/ui/Skeleton';
 import CreatableSelect from '../components/ui/CreatableSelect';
 import Select from '../components/ui/Select';
 import api from '../api/client';
 import { FiPlus, FiEdit2, FiTrash2, FiX, FiSave, FiFilter, FiSearch, FiExternalLink, FiCheckSquare } from 'react-icons/fi';
+import { BiRupee } from 'react-icons/bi';
 
 const DEVICE_CATEGORIES = {
     Mobile: ['Apple', 'Samsung', 'Google', 'OnePlus', 'Xiaomi', 'Oppo', 'Vivo', 'Realme', 'Motorola'],
@@ -19,6 +21,18 @@ const DEVICE_CATEGORIES = {
 const Jobs = () => {
     const { jobs, addJob, updateJob, deleteJob, loading } = useJobs();
     const { user } = useAuth();
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const searchParams = new URLSearchParams(location.search);
+        if (searchParams.get('action') === 'new') {
+            setEditingJob(null);
+            setShowForm(true);
+            navigate('/jobs', { replace: true });
+        }
+    }, [location, navigate]);
+
     const [showForm, setShowForm] = useState(false);
     const [editingJob, setEditingJob] = useState(null);
     const [showOutsourceModal, setShowOutsourceModal] = useState(false);
@@ -34,6 +48,51 @@ const Jobs = () => {
                 .catch(err => console.error('Failed to fetch vendors', err));
         }
     }, [showOutsourceModal]);
+
+    // Payment Modal State
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [paymentJob, setPaymentJob] = useState(null);
+    const [paymentData, setPaymentData] = useState({
+        type: 'full', // 'full' or 'discount'
+        discountAmount: '',
+        finalAmount: ''
+    });
+
+    const handlePayment = (job) => {
+        const balance = (parseFloat(job.totalAmount) || 0) - (parseFloat(job.advanceAmount) || 0);
+        setPaymentJob(job);
+        setPaymentData({
+            type: 'full',
+            discountAmount: '',
+            finalAmount: balance
+        });
+        setShowPaymentModal(true);
+    };
+
+    const submitPayment = (e) => {
+        e.preventDefault();
+        if (!paymentJob) return;
+
+        const currentTotal = parseFloat(paymentJob.totalAmount) || 0;
+        let newTotal = currentTotal;
+        let newAdvance = currentTotal; // By default, full payment means Advance becomes Total
+
+        if (paymentData.type === 'discount') {
+            const discount = parseFloat(paymentData.discountAmount) || 0;
+            newTotal = currentTotal - discount;
+            newAdvance = newTotal; // Fully paid after discount
+        }
+
+        updateJob(paymentJob.jobId || paymentJob.id, {
+            ...paymentJob,
+            status: 'delivered',
+            totalAmount: newTotal,
+            advanceAmount: newAdvance
+        });
+
+        setShowPaymentModal(false);
+        setPaymentJob(null);
+    };
 
     // Receive Back State
     const [showReceiveModal, setShowReceiveModal] = useState(false);
@@ -342,9 +401,15 @@ const Jobs = () => {
                                         {new Date(job.estimatedDelivery).toLocaleDateString()}
                                     </td>
                                     <td className="py-4 px-6">
-                                        <p className="font-semibold text-slate-700 text-sm">
-                                            ₹{((parseFloat(job.totalAmount) || 0) - (parseFloat(job.advanceAmount) || 0)).toLocaleString()}
-                                        </p>
+                                        {((parseFloat(job.totalAmount) || 0) - (parseFloat(job.advanceAmount) || 0)) <= 0 ? (
+                                            <span className="bg-emerald-100 text-emerald-700 text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap">
+                                                Paid Fully
+                                            </span>
+                                        ) : (
+                                            <p className="font-semibold text-slate-700 text-sm">
+                                                ₹{((parseFloat(job.totalAmount) || 0) - (parseFloat(job.advanceAmount) || 0)).toLocaleString()}
+                                            </p>
+                                        )}
                                     </td>
                                     <td className="py-4 px-6 text-right">
                                         <div className="flex items-center justify-end gap-2">
@@ -375,6 +440,16 @@ const Jobs = () => {
                                                         <FiExternalLink className="w-4 h-4" />
                                                     </button>
                                                 )
+                                            )}
+                                            {/* Get Payment Action */}
+                                            {['admin', 'technician'].includes(user?.role) && job.status !== 'delivered' && job.status !== 'outsourced' && (
+                                                <button
+                                                    onClick={() => handlePayment(job)}
+                                                    className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                                    title="Get Payment / Deliver"
+                                                >
+                                                    <BiRupee className="w-4 h-4" />
+                                                </button>
                                             )}
                                             {user?.role === 'admin' && (
                                                 <button
@@ -676,6 +751,97 @@ const Jobs = () => {
                         <button type="button" onClick={() => setShowReceiveModal(false)} className="btn-secondary">Cancel</button>
                         <button type="submit" className="btn-primary flex items-center gap-2">
                             <FiCheckSquare /> Confirm Return
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* Payment Modal */}
+            <Modal
+                isOpen={showPaymentModal}
+                onClose={() => setShowPaymentModal(false)}
+                title="Get Payment & Deliver Order"
+            >
+                <form onSubmit={submitPayment} className="space-y-6">
+                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-2">
+                        <div className="flex justify-between text-sm">
+                            <span className="text-slate-500">Total Order Amount:</span>
+                            <span className="font-semibold">₹{parseFloat(paymentJob?.totalAmount || 0).toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-slate-500">Advance Paid:</span>
+                            <span className="font-semibold text-green-600">- ₹{parseFloat(paymentJob?.advanceAmount || 0).toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-base border-t border-slate-200 pt-2 mt-2">
+                            <span className="font-bold text-slate-800">Pending Balance:</span>
+                            <span className="font-bold text-slate-800">₹{((parseFloat(paymentJob?.totalAmount || 0) - parseFloat(paymentJob?.advanceAmount || 0))).toLocaleString()}</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Payment Type</label>
+                        <div className="grid grid-cols-2 gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setPaymentData({ ...paymentData, type: 'full', discountAmount: '' })}
+                                className={`p-3 rounded-lg border text-sm font-medium transition-all ${paymentData.type === 'full'
+                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500'
+                                    : 'border-slate-200 hover:border-slate-300 text-slate-600'
+                                    }`}
+                            >
+                                Paid Full
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setPaymentData({ ...paymentData, type: 'discount' })}
+                                className={`p-3 rounded-lg border text-sm font-medium transition-all ${paymentData.type === 'discount'
+                                    ? 'border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500'
+                                    : 'border-slate-200 hover:border-slate-300 text-slate-600'
+                                    }`}
+                            >
+                                Paid with Discount
+                            </button>
+                        </div>
+                    </div>
+
+                    {paymentData.type === 'discount' && (
+                        <div className="animate-fade-in space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Discount Amount</label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
+                                    <input
+                                        type="number"
+                                        required
+                                        className="input-field !pl-8"
+                                        placeholder="0.00"
+                                        value={paymentData.discountAmount}
+                                        onChange={(e) => setPaymentData({ ...paymentData, discountAmount: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                            <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 text-sm">
+                                <div className="flex justify-between mb-1">
+                                    <span className="text-blue-600">New Total:</span>
+                                    <span className="font-medium">₹{(parseFloat(paymentJob?.totalAmount || 0) - parseFloat(paymentData.discountAmount || 0)).toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between font-bold">
+                                    <span className="text-blue-800">New Amount to Collect:</span>
+                                    <span>₹{((parseFloat(paymentJob?.totalAmount || 0) - parseFloat(paymentJob?.advanceAmount || 0) - parseFloat(paymentData.discountAmount || 0))).toLocaleString()}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                        <button type="button" onClick={() => setShowPaymentModal(false)} className="btn-secondary">Cancel</button>
+                        <button type="submit" className="btn-primary flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200">
+                            <FiCheckSquare />
+                            <span>
+                                {paymentData.type === 'full'
+                                    ? `Confirm & Deliver`
+                                    : `Apply Discount & Deliver`}
+                            </span>
                         </button>
                     </div>
                 </form>
