@@ -130,7 +130,7 @@ const Dashboard = () => {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {jobsLoading ? (
                     // Skeleton for Stat Cards
                     Array.from({ length: 4 }).map((_, i) => (
@@ -208,7 +208,7 @@ const Dashboard = () => {
                                 />
                             </div>
                         </div>
-                        <div className="flex-1 min-h-0">
+                        <div className="w-full h-80 lg:flex-1 lg:h-auto lg:min-h-0">
                             {chartsLoading ? (
                                 <div className="w-full h-full flex items-end gap-2 p-4">
                                     <Skeleton className="h-1/3 w-full rounded-t-lg" />
@@ -285,7 +285,7 @@ const Dashboard = () => {
                                 />
                             </div>
                         </div>
-                        <div className="flex-1 min-h-0 relative">
+                        <div className="w-full h-80 lg:flex-1 lg:h-auto lg:min-h-0 relative">
                             {chartsLoading ? (
                                 <div className="w-full h-full flex items-center justify-center">
                                     <Skeleton className="h-48 w-48 rounded-full" />

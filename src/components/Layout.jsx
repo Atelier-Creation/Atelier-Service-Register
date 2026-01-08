@@ -148,7 +148,7 @@ const Layout = () => {
                             className="lg:hidden text-gray-500 hover:text-gray-700"
                         >
                             <FiMenu className="w-6 h-6" />
-                        </button>
+                        </button>   
 
                         {/* Global Search */}
                         <div className="hidden md:flex items-center relative w-96">
@@ -162,13 +162,21 @@ const Layout = () => {
                         </div>
                     </div>
 
+                    {/* Mobile Logo */}
+                        <div className="lg:hidden mx-auto flex items-center gap-2">
+                            <img src="/favicon.png" alt="Logo" className='h-8 w-8 object-contain' />
+                            <div className="">
+                                <h1 className="font-bold text-gray-800 text-base text-lg">Registra</h1>
+                            </div>
+                        </div>
+
                     <div className="flex items-center gap-4">
                         {/* <button className="relative p-2 text-gray-400 hover:text-[#4361ee] hover:bg-blue-50 rounded-full transition-colors">
                             <FiBell className="w-5 h-5" />
                             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
                         </button> */}
 
-                        <div className="h-8 w-px bg-gray-200 mx-1"></div>
+                        <div className="h-8 w-px bg-gray-200 mx-1 hidden lg:block"></div>
 
                         <div className="relative" ref={userMenuRef}>
                             <div
