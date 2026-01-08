@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../api/client';
+import { useAuth } from './AuthContext';
 
 const JobContext = createContext(null);
 
@@ -12,12 +13,21 @@ export const useJobs = () => {
 };
 
 export const JobProvider = ({ children }) => {
+    const { isAuthenticated } = useAuth();
     const [jobs, setJobs] = useState([]);
     const [customers, setCustomers] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (!isAuthenticated) {
+            setJobs([]);
+            setCustomers([]);
+            setLoading(false);
+            return;
+        }
+
         const fetchData = async () => {
+            setLoading(true);
             try {
                 const [jobsRes, customersRes] = await Promise.all([
                     api.get('/jobs'),
@@ -32,7 +42,7 @@ export const JobProvider = ({ children }) => {
             }
         };
         fetchData();
-    }, []);
+    }, [isAuthenticated]);
 
     const addJob = async (jobData) => {
         try {
