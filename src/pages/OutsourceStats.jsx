@@ -69,7 +69,7 @@ const OutsourceStats = () => {
                     </div>
 
                     <div className="z-20 mt-2 flex items-center justify-between">
-                        <p className="text-gray-500 text-sm font-medium">Outsource in</p>
+                        <p className="text-gray-500 text-sm ">Outsource in</p>
                         <div className="w-28 z-20">
                             <Select
                                 value={selectedMonth}
@@ -163,7 +163,7 @@ const OutsourceStats = () => {
                             ) : technicians.length > 0 ? (
                                 technicians.map((tech) => (
                                     <tr key={tech.name} className="hover:bg-gray-50/50 transition-colors">
-                                        <td className="py-4 px-6 font-medium text-gray-800">{tech.name}</td>
+                                        <td className="py-4 px-6  text-gray-800">{tech.name}</td>
                                         <td className="py-4 px-6 text-gray-600">{tech.totalJobs}</td>
                                         <td className="py-4 px-6">
                                             {tech.activeJobs > 0 ? (

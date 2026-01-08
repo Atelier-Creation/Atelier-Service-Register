@@ -33,7 +33,7 @@ const StatCard = ({
             </div>
 
             <div className="z-10 mt-2">
-                <p className="text-gray-500 text-sm font-medium">{label}</p>
+                <p className="text-gray-500 text-sm ">{label}</p>
             </div>
 
             {/* Subtle background decoration */}

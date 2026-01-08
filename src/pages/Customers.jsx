@@ -53,7 +53,7 @@ const Customers = () => {
                     <>
                         <div className="card p-6 flex items-center justify-between">
                             <div>
-                                <p className="text-gray-500 text-sm font-medium mb-1">Total Customers</p>
+                                <p className="text-gray-500 text-sm  mb-1">Total Customers</p>
                                 <p className="text-3xl font-bold text-gray-800">{customers.length}</p>
                             </div>
                             <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-600">
@@ -62,7 +62,7 @@ const Customers = () => {
                         </div>
                         <div className="card p-6 flex items-center justify-between">
                             <div>
-                                <p className="text-gray-500 text-sm font-medium mb-1">Active Jobs</p>
+                                <p className="text-gray-500 text-sm  mb-1">Active Jobs</p>
                                 <p className="text-3xl font-bold text-gray-800">{jobs.length}</p>
                             </div>
                             <div className="w-12 h-12 bg-purple-50 rounded-full flex items-center justify-center text-purple-600">
@@ -71,7 +71,7 @@ const Customers = () => {
                         </div>
                         <div className="card p-6 flex items-center justify-between">
                             <div>
-                                <p className="text-gray-500 text-sm font-medium mb-1">Engagement</p>
+                                <p className="text-gray-500 text-sm  mb-1">Engagement</p>
                                 <p className="text-3xl font-bold text-gray-800">
                                     {customers.length > 0 ? (jobs.length / customers.length).toFixed(1) : 0}
                                 </p>
@@ -116,11 +116,11 @@ const Customers = () => {
                                 >
                                     <div className="flex items-start justify-between mb-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold group-hover:bg-[#4361ee] group-hover:text-white transition-colors">
+                                            <div className="w-10 h-10 rounded-full bg-gray-100 capitalize flex items-center justify-center text-gray-600 font-bold group-hover:bg-[#4361ee] group-hover:text-white transition-colors">
                                                 {customer.name.charAt(0).toUpperCase()}
                                             </div>
                                             <div>
-                                                <h4 className="font-bold text-gray-800">{customer.name}</h4>
+                                                <h4 className="font-bold text-gray-800 capitalize">{customer.name}</h4>
                                                 <p className="text-gray-500 text-xs">{customer.phone}</p>
                                             </div>
                                         </div>
@@ -153,7 +153,7 @@ const Customers = () => {
                                                 </span>
                                             </Link>
                                         ) : (
-                                            <span className="text-emerald-500 font-medium text-[10px] bg-emerald-50 px-2 py-0.5 rounded-full">
+                                            <span className="text-emerald-500  text-[10px] bg-emerald-50 px-2 py-0.5 rounded-full">
                                                 All Paid
                                             </span>
                                         )}

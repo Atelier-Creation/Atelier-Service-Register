@@ -167,7 +167,7 @@ const Dashboard = () => {
                                 </div>
 
                                 <div className="z-20 mt-2 flex items-center justify-between">
-                                    <p className="text-gray-500 text-sm font-medium">Orders in</p>
+                                    <p className="text-gray-500 text-sm ">Orders in</p>
                                     <div className="w-28 z-20">
                                         <Select
                                             value={selectedMonth}
@@ -311,7 +311,7 @@ const Dashboard = () => {
                                             verticalAlign="bottom"
                                             height={36}
                                             iconType="circle"
-                                            formatter={(value) => <span className="text-gray-600 text-sm font-medium ml-1">{value}</span>}
+                                            formatter={(value) => <span className="text-gray-600 text-sm  ml-1">{value}</span>}
                                         />
                                     </PieChart>
                                 </ResponsiveContainer>
@@ -386,7 +386,7 @@ const Dashboard = () => {
                                 <FiFileText className="text-blue-500" />
                                 Recent Orders
                             </h3>
-                            <Link to="/jobs" className="text-sm text-blue-600 hover:underline font-medium">View All</Link>
+                            <Link to="/jobs" className="text-sm text-blue-600 hover:underline ">View All</Link>
                         </div>
                         <div className="space-y-4">
                             {jobsLoading ? (
@@ -416,7 +416,7 @@ const Dashboard = () => {
                                             </div>
                                             <div className="flex justify-between items-center">
                                                 <p className="text-gray-500 text-xs truncate pr-2">{job.device} - {job.issue?.slice(0, 20)}...</p>
-                                                <span className={`text-[10px] px-2 py-0.5 rounded-full capitalize font-medium ${getStatusClass(job.status).replace('border', '')}`}>
+                                                <span className={`text-[10px] px-2 py-0.5 rounded-full capitalize  ${getStatusClass(job.status).replace('border', '')}`}>
                                                     {job.status.replace('-', ' ')}
                                                 </span>
                                             </div>

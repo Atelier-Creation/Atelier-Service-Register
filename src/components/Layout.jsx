@@ -65,7 +65,7 @@ const Layout = () => {
                     </div>
                     <div className={`overflow-hidden transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0 ml-0' : 'w-auto opacity-100 ml-3'}`}>
                         <h1 className="font-bold text-gray-800 text-lg leading-tight">Registra</h1>
-                        <p className="text-xs text-gray-400 font-medium">by Atelier </p>
+                        <p className="text-xs text-gray-400">by Atelier </p>
                     </div>
 
                     {/* Desktop Toggle Button - Positioned on the border */}
@@ -96,13 +96,21 @@ const Layout = () => {
                                 to={item.path}
                                 onClick={() => setSidebarOpen(false)}
                                 title={isCollapsed ? item.label : ''}
-                                className={`flex items-center px-3 py-3 rounded-lg font-medium transition-all duration-200 mb-1
-                                    ${isActive ? 'bg-blue-50 text-[#4361ee]' : 'text-gray-500 hover:bg-gray-50 hover:text-[#4361ee]'}
-                                    ${isCollapsed ? 'justify-center' : 'gap-3'}
+                                className={`
+                                    group flex items-center w-full p-2 mb-1 rounded-md font-medium text-[14.5px] transition-colors duration-200
+                                    ${isActive
+                                        ? 'bg-[#F2F5FF] text-[#3D5EE1]'
+                                        : 'text-[#667085] hover:bg-[#DDE4FF] hover:text-[#3D5EE1]'}
+                                    ${isCollapsed ? 'justify-center' : 'justify-start gap-3'}
                                 `}
                             >
-                                <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-[#4361ee]' : 'text-gray-400'}`} />
-                                <span className={`whitespace-nowrap overflow-hidden transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
+                                <div className={`
+                                    p-1.5 rounded-sm   flex items-center justify-center shrink-0
+                                    ${isActive ? 'text-[#3D5EE1] bg-white shadow-sm' : 'text-[#667085] group-hover:text-[#3D5EE1]'}
+                                `}>
+                                    <Icon className="w-[18px] h-[18px]" strokeWidth={2} />
+                                </div>
+                                <span className={`whitespace-nowrap overflow-hidden transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0 hidden' : 'w-auto opacity-100 block'}`}>
                                     {item.label}
                                 </span>
                             </Link>
@@ -115,10 +123,16 @@ const Layout = () => {
                     <button
                         onClick={handleLogout}
                         title={isCollapsed ? 'Logout' : ''}
-                        className={`flex items-center w-full text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors px-3 py-3 ${isCollapsed ? 'justify-center' : 'gap-3'}`}
+                        className={`
+                            group flex items-center w-full p-2 mb-1 rounded-md font-medium text-[14.5px] transition-colors duration-200
+                            text-[#667085] hover:bg-red-50 hover:text-red-500
+                            ${isCollapsed ? 'justify-center' : 'justify-start gap-3'}
+                        `}
                     >
-                        <FiLogOut className="w-5 h-5 shrink-0" />
-                        <span className={`whitespace-nowrap overflow-hidden transition-all duration-300 font-medium ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
+                        <div className="p-1.5 rounded-sm bg-white shadow-sm flex items-center justify-center shrink-0 group-hover:text-red-500 text-[#667085]">
+                            <FiLogOut className="w-[18px] h-[18px]" strokeWidth={2} />
+                        </div>
+                        <span className={`whitespace-nowrap overflow-hidden transition-all duration-300 font-medium ${isCollapsed ? 'w-0 opacity-0 hidden' : 'w-auto opacity-100 block'}`}>
                             Logout
                         </span>
                     </button>
