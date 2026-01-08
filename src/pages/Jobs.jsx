@@ -7,7 +7,7 @@ import { Skeleton } from '../components/ui/Skeleton';
 import CreatableSelect from '../components/ui/CreatableSelect';
 import Select from '../components/ui/Select';
 import api from '../api/client';
-import { FiPlus, FiEdit2, FiTrash2, FiX, FiSave, FiFilter, FiSearch, FiExternalLink, FiCheckSquare } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiX, FiSave, FiFilter, FiSearch, FiExternalLink, FiCheckSquare, FiEye } from 'react-icons/fi';
 import { BiRupee } from 'react-icons/bi';
 
 const DEVICE_CATEGORIES = {
@@ -26,10 +26,18 @@ const Jobs = () => {
 
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
+
+        // Handle 'New Order' action
         if (searchParams.get('action') === 'new') {
             setEditingJob(null);
             setShowForm(true);
             navigate('/jobs', { replace: true });
+        }
+
+        // Handle search query from Customers page
+        const searchParam = searchParams.get('search');
+        if (searchParam) {
+            setSearchTerm(searchParam);
         }
     }, [location, navigate]);
 
@@ -98,6 +106,24 @@ const Jobs = () => {
     const [showReceiveModal, setShowReceiveModal] = useState(false);
     const [receivingJob, setReceivingJob] = useState(null);
     const [receiveData, setReceiveData] = useState({ status: 'ready', cost: '' });
+
+    // View Details State
+    const [showViewModal, setShowViewModal] = useState(false);
+    const [viewJob, setViewJob] = useState(null);
+
+    // Update viewJob when jobs list changes (to show real-time history updates)
+    useEffect(() => {
+        if (viewJob && showViewModal) {
+            const updatedJob = jobs.find(j => (j.jobId || j.id || j._id) === (viewJob.jobId || viewJob.id || viewJob._id));
+            if (updatedJob) {
+                // If updatedJob has more history items or different status, update viewJob
+                if (updatedJob.status !== viewJob.status ||
+                    (updatedJob.statusHistory && viewJob.statusHistory && updatedJob.statusHistory.length !== viewJob.statusHistory.length)) {
+                    setViewJob(updatedJob);
+                }
+            }
+        }
+    }, [jobs, showViewModal, viewJob]);
 
     const [filterStatus, setFilterStatus] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
@@ -361,7 +387,7 @@ const Jobs = () => {
                                     </td>
                                     <td className="py-4 px-6">
                                         <div>
-                                            <p className="font-medium text-slate-800">{job.customerName}</p>
+                                            <p className="font-medium text-slate-800 capitalize">{job.customerName}</p>
                                             <p className="text-slate-500 text-xs">{job.phone}</p>
                                         </div>
                                     </td>
@@ -403,7 +429,7 @@ const Jobs = () => {
                                     <td className="py-4 px-6">
                                         {((parseFloat(job.totalAmount) || 0) - (parseFloat(job.advanceAmount) || 0)) <= 0 ? (
                                             <span className="bg-emerald-100 text-emerald-700 text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap">
-                                                Paid Fully
+                                                Paid ₹{job.totalAmount}
                                             </span>
                                         ) : (
                                             <p className="font-semibold text-slate-700 text-sm">
@@ -413,6 +439,15 @@ const Jobs = () => {
                                     </td>
                                     <td className="py-4 px-6 text-right">
                                         <div className="flex items-center justify-end gap-2">
+                                            {['admin', 'technician'].includes(user?.role) && (
+                                                <button
+                                                    onClick={() => { setViewJob(job); setShowViewModal(true); }}
+                                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                    title="View Details"
+                                                >
+                                                    <FiEye className="w-4 h-4" />
+                                                </button>
+                                            )}
                                             {['admin', 'technician'].includes(user?.role) && (
                                                 <button
                                                     onClick={() => handleEdit(job)}
@@ -845,6 +880,103 @@ const Jobs = () => {
                         </button>
                     </div>
                 </form>
+            </Modal>
+
+            {/* View Details Modal */}
+            <Modal
+                isOpen={showViewModal}
+                onClose={() => setShowViewModal(false)}
+                title="Order Details"
+                className="max-w-2xl"
+            >
+                {viewJob && (
+                    <div className="space-y-6">
+                        {/* Header Info */}
+                        <div className="flex justify-between items-start bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            <div>
+                                <h3 className="font-bold text-lg text-slate-800">Order #{(viewJob.jobId || viewJob.id || viewJob._id || '').toString().slice(-6)}</h3>
+                                <p className="text-slate-500 text-sm">Created on {new Date(viewJob.createdAt).toLocaleDateString()}</p>
+                            </div>
+                            <span className={`status-badge capitalize ${getStatusClass(viewJob.status)}`}>
+                                {viewJob.status.replace('-', ' ')}
+                            </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Customer & Device */}
+                            <div className="space-y-4">
+                                <div className="card p-4 border border-slate-100 shadow-none">
+                                    <h4 className="font-semibold text-slate-700 mb-3 text-sm uppercase tracking-wide">Information</h4>
+                                    <div className="space-y-2 text-sm">
+                                        <div className="flex justify-between"><span className="text-slate-500">Customer:</span> <span className="font-medium text-slate-800">{viewJob.customerName}</span></div>
+                                        <div className="flex justify-between"><span className="text-slate-500">Phone:</span> <span className="font-medium text-slate-800">{viewJob.phone}</span></div>
+                                        <div className="flex justify-between"><span className="text-slate-500">Device:</span> <span className="font-medium text-slate-800">{viewJob.device}</span></div>
+                                        <div className="flex justify-between"><span className="text-slate-500">Technician:</span> <span className="font-medium text-slate-800">{viewJob.technician || 'Unassigned'}</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Financials */}
+                            <div className="space-y-4">
+                                <div className="card p-4 border border-slate-100 shadow-none">
+                                    <h4 className="font-semibold text-slate-700 mb-3 text-sm uppercase tracking-wide">Financials</h4>
+                                    <div className="space-y-2 text-sm">
+                                        <div className="flex justify-between"><span className="text-slate-500">Total Amount:</span> <span className="font-medium text-slate-800">₹{parseFloat(viewJob.totalAmount || 0).toLocaleString()}</span></div>
+                                        <div className="flex justify-between"><span className="text-slate-500">Advance Paid:</span> <span className="font-medium text-emerald-600">-₹{parseFloat(viewJob.advanceAmount || 0).toLocaleString()}</span></div>
+                                        <div className="pt-2 border-t border-slate-100 flex justify-between font-bold">
+                                            <span className="text-slate-700">Balance:</span>
+                                            <span>₹{((parseFloat(viewJob.totalAmount || 0) - parseFloat(viewJob.advanceAmount || 0))).toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Outsource Info (if exists) */}
+                        {viewJob.outsourced && viewJob.outsourced.name && (
+                            <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                                <h4 className="font-semibold text-purple-800 mb-2 text-sm uppercase tracking-wide flex items-center gap-2">
+                                    <FiExternalLink /> Outsourced Details
+                                </h4>
+                                <div className="grid grid-cols-2 gap-4 text-sm text-purple-900">
+                                    <div><span className="opacity-70">Vendor:</span> <span className="font-medium">{viewJob.outsourced.name}</span></div>
+                                    <div><span className="opacity-70">Contact:</span> <span className="font-medium">{viewJob.outsourced.phone || 'N/A'}</span></div>
+                                    <div><span className="opacity-70">Vendor Cost:</span> <span className="font-medium">₹{parseFloat(viewJob.outsourced.cost || 0).toLocaleString()}</span></div>
+                                    <div><span className="opacity-70">Date:</span> <span className="font-medium">{viewJob.outsourced.date ? new Date(viewJob.outsourced.date).toLocaleDateString() : 'N/A'}</span></div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Status Timeline */}
+                        <div className="border-t border-slate-100 pt-6">
+                            <h4 className="font-semibold text-slate-800 mb-4">Status History</h4>
+                            <div className="space-y-6 relative before:absolute before:left-[7px] before:top-2 before:h-full before:w-[2px] before:bg-slate-100">
+                                {viewJob.statusHistory && viewJob.statusHistory.length > 0 ? (
+                                    [...viewJob.statusHistory].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).map((history, idx) => (
+                                        <div key={idx} className="relative pl-8">
+                                            <div className="absolute left-0 top-1.5 w-4 h-4 rounded-full bg-white border-2 border-blue-500 z-10"></div>
+                                            <div className="flex flex-col">
+                                                <span className="font-medium text-slate-800 capitalize text-sm">{history.status.replace('-', ' ')}</span>
+                                                <span className="text-xs text-slate-400">{new Date(history.timestamp).toLocaleString()}</span>
+                                                {history.note && <p className="text-xs text-slate-500 mt-0.5">{history.note}</p>}
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="relative pl-8">
+                                        <div className="absolute left-0 top-1.5 w-4 h-4 rounded-full bg-white border-2 border-slate-300 z-10"></div>
+                                        <p className="text-sm text-slate-500">Current Status: <span className="font-medium capitalize">{viewJob.status.replace('-', ' ')}</span></p>
+                                        <p className="text-xs text-slate-400">History tracking started recently.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end pt-4">
+                            <button onClick={() => setShowViewModal(false)} className="btn-secondary">Close</button>
+                        </div>
+                    </div>
+                )}
             </Modal>
         </div >
     );

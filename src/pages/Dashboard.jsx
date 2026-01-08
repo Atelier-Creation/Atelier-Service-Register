@@ -362,14 +362,14 @@ const Dashboard = () => {
                                 todayDeliveryJobs.map(job => (
                                     <div key={job.id} className="group flex items-center justify-between p-4 bg-white border border-slate-100 rounded-xl hover:border-blue-200 hover:shadow-sm transition-all">
                                         <div>
-                                            <p className="font-semibold text-slate-700 text-sm">{job.customerName}</p>
+                                            <p className="font-semibold text-slate-700 capitalize text-sm">{job.customerName}</p>
                                             <p className="text-slate-400 text-xs mt-0.5 flex items-center gap-1">
                                                 {job.device}
                                                 <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
                                                 #{(job.jobId || job.id || job._id || '').toString().slice(-4)}
                                             </p>
                                         </div>
-                                        <span className={`scale-90 origin-right status-badge ${getStatusClass(job.status)}`}>
+                                        <span className={`scale-90 origin-right capitalize status-badge ${getStatusClass(job.status)}`}>
                                             {job.status.replace('-', ' ')}
                                         </span>
                                     </div>
@@ -403,12 +403,12 @@ const Dashboard = () => {
                             ) : (
                                 recentJobs.map(job => (
                                     <div key={job.id} className="flex items-center gap-4 p-2 hover:bg-slate-50 rounded-lg transition-colors -mx-2">
-                                        <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-sm font-bold border border-slate-200 shrink-0">
+                                        <div className="w-10 h-10 uppercase rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-sm font-bold border border-slate-200 shrink-0">
                                             {job.customerName.charAt(0)}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between items-start mb-0.5">
-                                                <p className="font-semibold text-slate-700 text-sm truncate">{job.customerName}</p>
+                                                <p className="font-semibold text-slate-700 capitalize text-sm truncate">{job.customerName}</p>
                                                 <span className="text-xs text-slate-400 whitespace-nowrap">
                                                     {new Date(job.createdAt || Date.now()).toLocaleDateString()}
                                                 </span>

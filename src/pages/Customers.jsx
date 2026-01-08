@@ -1,6 +1,7 @@
 import { useJobs } from '../context/JobContext';
 import { FiPhone, FiFileText, FiCalendar, FiTrendingUp } from 'react-icons/fi';
 import { Skeleton } from '../components/ui/Skeleton';
+import { Link } from 'react-router-dom';
 
 const Customers = () => {
     const { customers, jobs, loading } = useJobs();
@@ -141,9 +142,19 @@ const Customers = () => {
                                             <FiCalendar className="w-3 h-3" />
                                             {stats.lastVisit}
                                         </span>
-                                        {stats.pendingAmount > 0 && (
-                                            <span className="text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-full">
-                                                Due: ₹{stats.pendingAmount}
+                                        {stats.pendingAmount > 0 ? (
+                                            <Link
+                                                to={`/jobs?search=${customer.phone}&filter=all`}
+                                                className="flex items-center gap-2 group/pay"
+                                                title="View orders to collect payment"
+                                            >
+                                                <span className="text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100 group-hover/pay:bg-amber-100 transition-colors">
+                                                    Due: ₹{stats.pendingAmount}
+                                                </span>
+                                            </Link>
+                                        ) : (
+                                            <span className="text-emerald-500 font-medium text-[10px] bg-emerald-50 px-2 py-0.5 rounded-full">
+                                                All Paid
                                             </span>
                                         )}
                                     </div>

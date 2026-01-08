@@ -60,10 +60,10 @@ const Layout = () => {
             >
                 {/* Logo */}
                 <div className={`h-16 flex items-center border-b border-slate-100 relative transition-all duration-300 ${isCollapsed ? 'justify-center px-0' : 'px-6'}`}>
-                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
-                        <img src="/favicon.png" alt="Logo" className='h-6 w-6 object-contain' />
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0">
+                        <img src="/favicon.png" alt="Logo" className='h-full w-full object-contain' />
                     </div>
-                    <div className={`ml-3 overflow-hidden transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
+                    <div className={`overflow-hidden transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0 ml-0' : 'w-auto opacity-100 ml-3'}`}>
                         <h1 className="font-bold text-slate-800 text-lg leading-tight">Registra</h1>
                         <p className="text-xs text-slate-400 font-medium">by Atelier </p>
                     </div>
