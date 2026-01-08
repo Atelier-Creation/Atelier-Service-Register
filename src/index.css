@@ -51,12 +51,12 @@ a {
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: trangrayY(10px);
+    transform: translateY(10px);
   }
 
   to {
     opacity: 1;
-    transform: trangrayY(0);
+    transform: translateY(0);
   }
 }
 

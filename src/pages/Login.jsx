@@ -145,7 +145,7 @@ const Login = () => {
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">Username</label>
                         <div className="relative">
-                            <FiUser className="absolute left-3 top-1/2 -trangray-y-1/2 text-gray-400" />
+                            <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                             <input
                                 type="text"
                                 name="username"
@@ -161,7 +161,7 @@ const Login = () => {
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
                         <div className="relative">
-                            <FiLock className="absolute left-3 top-1/2 -trangray-y-1/2 text-gray-400" />
+                            <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 name="password"
@@ -174,7 +174,7 @@ const Login = () => {
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -trangray-y-1/2 text-gray-400 hover:text-[#4361ee] transition-colors"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#4361ee] transition-colors"
                             >
                                 {showPassword ? <FiEyeOff /> : <FiEye />}
                             </button>

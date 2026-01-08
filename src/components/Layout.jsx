@@ -2,7 +2,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
     FiHome, FiFileText, FiSearch, FiUsers, FiSettings,
-    FiLogOut, FiMenu, FiX, FiTool , FiChevronDown, FiTrendingUp,
+    FiLogOut, FiMenu, FiX, FiTool, FiChevronDown, FiTrendingUp,
     FiChevronLeft, FiChevronRight,
 } from 'react-icons/fi';
 import { useState, useRef, useEffect } from 'react';
@@ -38,7 +38,7 @@ const Layout = () => {
     const menuItems = [
         { path: '/', icon: FiHome, label: 'Dashboard' },
         { path: '/jobs', icon: FiFileText, label: 'Orders' },
-        { path: '/3rd-party-stats', icon: FiTool , label: 'Out Source' },
+        { path: '/3rd-party-stats', icon: FiTool, label: 'Out Source' },
         { path: '/customers', icon: FiUsers, label: 'Customers' },
         ...(user?.role === 'admin' ? [
             { path: '/reports', icon: FiTrendingUp, label: 'Reports' },
@@ -53,7 +53,7 @@ const Layout = () => {
                 className={`fixed inset-y-0 left-0 z-50 bg-white border-r border-gray-200 
                 transform transition-all duration-300 
                 flex flex-col lg:static lg:inset-auto overflow-visible
-                ${sidebarOpen ? 'trangray-x-0' : '-trangray-x-full lg:trangray-x-0'}
+                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
                 w-64 ${isCollapsed ? 'lg:w-20' : 'lg:w-64'}
                 `}
             >
@@ -70,7 +70,7 @@ const Layout = () => {
                     {/* Desktop Toggle Button - Positioned on the border */}
                     <button
                         onClick={() => setIsCollapsed(!isCollapsed)}
-                        className="hidden lg:flex absolute -right-3 top-1/2 -trangray-y-1/2 w-6 h-6 bg-white border border-gray-200 rounded-full items-center justify-center text-gray-400 hover:text-blue-600 shadow-sm z-50 hover:bg-gray-50 transition-colors cursor-pointer"
+                        className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white border border-gray-200 rounded-full items-center justify-center text-gray-400 hover:text-blue-600 shadow-sm z-50 hover:bg-gray-50 transition-colors cursor-pointer"
                     >
                         {isCollapsed ? <FiChevronRight size={14} /> : <FiChevronLeft size={14} />}
                     </button>

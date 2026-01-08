@@ -215,7 +215,7 @@ const Settings = () => {
                                 </div>
                                 <label className="relative inline-flex items-center cursor-not-allowed">
                                     <input type="checkbox" className="sr-only peer" disabled />
-                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:trangray-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#4361ee]"></div>
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#4361ee]"></div>
                                 </label>
                             </div>
                         ))}
@@ -320,7 +320,7 @@ const Settings = () => {
                                                 <button
                                                     type="button"
                                                     onClick={() => setShowPassword(!showPassword)}
-                                                    className="absolute right-3 top-1/2 -trangray-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
                                                 >
                                                     {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
                                                 </button>

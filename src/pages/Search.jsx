@@ -64,7 +64,7 @@ const Search = () => {
                     </div>
 
                     <div className="relative max-w-2xl mx-auto">
-                        <FiSearch className="absolute left-4 top-1/2 -trangray-y-1/2 text-gray-400 w-6 h-6" />
+                        <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-6 h-6" />
                         <input
                             type="text"
                             value={searchQuery}

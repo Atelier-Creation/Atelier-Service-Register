@@ -39,7 +39,19 @@ const Jobs = () => {
         if (searchParam) {
             setSearchTerm(searchParam);
         }
-    }, [location, navigate]);
+
+        // Handle 'View Job' action
+        const viewJobId = searchParams.get('view');
+        if (viewJobId) {
+            const jobToView = jobs.find(j => (j.jobId || j.id || j._id) === viewJobId);
+            if (jobToView) {
+                setViewJob(jobToView);
+                setShowViewModal(true);
+                // Optional: Clean URL
+                // navigate('/jobs', { replace: true });
+            }
+        }
+    }, [location, navigate, jobs]);
 
     const [showForm, setShowForm] = useState(false);
     const [editingJob, setEditingJob] = useState(null);
@@ -353,7 +365,7 @@ const Jobs = () => {
 
                 {/* Search within table (Visual only for now) */}
                 <div className="relative w-full sm:w-64">
-                    <FiSearch className="absolute left-3 top-1/2 -trangray-y-1/2 text-gray-400" />
+                    <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                         type="text"
                         placeholder="Search in orders..."
@@ -631,14 +643,14 @@ const Jobs = () => {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Total Amount</label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -trangray-y-1/2 text-gray-400">₹</span>
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">₹</span>
                                     <input type="number" name="totalAmount" value={formData.totalAmount} onChange={handleChange} className="input-field !pl-6" required />
                                 </div>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Advance</label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -trangray-y-1/2 text-gray-400">₹</span>
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">₹</span>
                                     <input type="number" name="advanceAmount" value={formData.advanceAmount} onChange={handleChange} className="input-field !pl-6" />
                                 </div>
                             </div>
@@ -718,7 +730,7 @@ const Jobs = () => {
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Cost / Amount Paid</label>
                         <div className="relative">
-                            <span className="absolute left-3 top-1/2 -trangray-y-1/2 text-gray-400">₹</span>
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">₹</span>
                             <input
                                 ref={costInputRef}
                                 type="number"
@@ -768,7 +780,7 @@ const Jobs = () => {
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Final 3rd Party Cost</label>
                         <div className="relative">
-                            <span className="absolute left-3 top-1/2 -trangray-y-1/2 text-gray-400">₹</span>
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">₹</span>
                             <input
                                 type="number"
                                 required
@@ -842,7 +854,7 @@ const Jobs = () => {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Discount Amount</label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -trangray-y-1/2 text-gray-400">₹</span>
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">₹</span>
                                     <input
                                         type="number"
                                         required

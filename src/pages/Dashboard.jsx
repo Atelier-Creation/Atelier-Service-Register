@@ -361,9 +361,13 @@ const Dashboard = () => {
                                 </div>
                             ) : (
                                 todayDeliveryJobs.map(job => (
-                                    <div key={job.id} className="group flex items-center justify-between p-4 bg-white border border-gray-100 rounded-xl hover:border-blue-200 hover:shadow-sm transition-all">
+                                    <Link
+                                        to={`/jobs?view=${job.jobId || job.id || job._id}`}
+                                        key={job.id}
+                                        className="group flex items-center justify-between p-4 bg-white border border-gray-100 rounded-xl hover:border-blue-200 hover:shadow-sm transition-all cursor-pointer"
+                                    >
                                         <div>
-                                            <p className="font-semibold text-gray-700 capitalize text-sm">{job.customerName}</p>
+                                            <p className="font-semibold text-gray-700 capitalize text-sm group-hover:text-blue-600 transition-colors">{job.customerName}</p>
                                             <p className="text-gray-400 text-xs mt-0.5 flex items-center gap-1">
                                                 {job.device}
                                                 <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
@@ -373,7 +377,7 @@ const Dashboard = () => {
                                         <span className={`scale-90 origin-right capitalize status-badge ${getStatusClass(job.status)}`}>
                                             {job.status.replace('-', ' ')}
                                         </span>
-                                    </div>
+                                    </Link>
                                 ))
                             )}
                         </div>

@@ -71,7 +71,7 @@ const CreatableSelect = ({ label, options = [], value, onChange, placeholder, cl
                 <button
                     type="button"
                     onClick={() => setIsOpen(!isOpen)}
-                    className="absolute right-3 top-1/2 -trangray-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                     <FiChevronDown className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
                 </button>
