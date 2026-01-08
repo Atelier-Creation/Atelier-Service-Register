@@ -50,14 +50,14 @@ const Select = ({ value, onChange, options, placeholder = "Select...", className
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className={`flex w-full items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-50 focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 ${triggerClassName}`}
+                className={`flex w-full items-center justify-between rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-50 focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 ${triggerClassName}`}
             >
                 <span className="truncate">{selectedLabel}</span>
                 <FiChevronDown className={`h-4 w-4 shrink-0 opacity-50 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {isOpen && (
-                <div className="absolute z-[100] mt-1 m-1 max-h-60 w-full min-w-[120px] overflow-auto rounded-md border border-slate-200 bg-white text-slate-950 shadow-md animate-in fade-in-0 zoom-in-95">
+                <div className="absolute z-[100] mt-1 m-1 max-h-60 w-full min-w-[120px] overflow-auto rounded-md border border-gray-200 bg-white text-gray-950 shadow-md animate-in fade-in-0 zoom-in-95">
                     <div className="p-1">
                         {options.map((option, index) => {
                             const optValue = typeof option === 'object' ? option.value : option;
@@ -74,10 +74,10 @@ const Select = ({ value, onChange, options, placeholder = "Select...", className
                                         onChange(optValue);
                                         setIsOpen(false);
                                     }}
-                                    className={`relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-slate-100 cursor-pointer ${isSelected ? 'bg-slate-50 font-medium' : ''}`}
+                                    className={`relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-gray-100 cursor-pointer ${isSelected ? 'bg-gray-50 font-medium' : ''}`}
                                 >
                                     {isSelected && (
-                                        <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center text-slate-900">
+                                        <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center text-gray-900">
                                             <FiCheck className="h-4 w-4" />
                                         </span>
                                     )}

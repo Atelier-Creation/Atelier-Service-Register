@@ -16,7 +16,7 @@ const BackgroundCard = ({ className, index = 1 }) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 0.6, y: 0 }}
             transition={{ delay: (index % 5) * 0.1, duration: 0.8 }}
-            className={`bg-white rounded-xl shadow-sm border border-slate-200/60 p-4 ${className} flex flex-col justify-between`}
+            className={`bg-white rounded-xl shadow-sm border border-gray-200/60 p-4 ${className} flex flex-col justify-between`}
         >
             <div className="flex justify-between items-start mb-2">
                 <div className="flex gap-3">
@@ -24,11 +24,11 @@ const BackgroundCard = ({ className, index = 1 }) => {
                         <div className="w-5 h-5 rounded-md bg-current opacity-20" />
                     </div>
                     <div>
-                        <div className="font-semibold text-slate-700 text-sm">Order #{orderId}</div>
-                        <div className="text-xs text-slate-400">Fixed Display</div>
+                        <div className="font-semibold text-gray-700 text-sm">Order #{orderId}</div>
+                        <div className="text-xs text-gray-400">Fixed Display</div>
                     </div>
                 </div>
-                <span className="text-xs font-bold text-slate-700">₹{price}</span>
+                <span className="text-xs font-bold text-gray-700">₹{price}</span>
             </div>
 
             <div className="flex gap-2 mt-2">
@@ -103,7 +103,7 @@ const Login = () => {
             </div>
 
             {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-slate-50/80 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-gray-50 via-gray-50/80 to-transparent pointer-events-none" />
 
             <div className="max-w-md w-full bg-white/80 backdrop-blur-md rounded-2xl shadow-2xl p-8 border border-white/50 relative z-10">
 
@@ -112,18 +112,18 @@ const Login = () => {
                     <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-50">
                         <img src="/favicon.png" alt="Atelier logo" srcSet="/favicon.png" className="object-cover" />
                     </div>
-                    <h1 className="text-2xl font-bold text-slate-800">Welcome Back</h1>
-                    <p className="text-slate-500 text-sm mt-1">Sign in to your account</p>
+                    <h1 className="text-2xl font-bold text-gray-800">Welcome Back</h1>
+                    <p className="text-gray-500 text-sm mt-1">Sign in to your account</p>
                 </div>
 
                 {/* Role Toggle */}
-                <div className="bg-slate-100/50 p-1 rounded-lg flex mb-6 border border-slate-200/50">
+                <div className="bg-gray-100/50 p-1 rounded-lg flex mb-6 border border-gray-200/50">
                     <button
                         type="button"
                         onClick={() => setSelectedRole('admin')}
                         className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${selectedRole === 'admin'
                             ? 'bg-white text-[#4361ee] shadow-sm'
-                            : 'text-slate-500 hover:text-slate-700'
+                            : 'text-gray-500 hover:text-gray-700'
                             }`}
                     >
                         Admin
@@ -133,7 +133,7 @@ const Login = () => {
                         onClick={() => setSelectedRole('technician')}
                         className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${selectedRole === 'technician'
                             ? 'bg-white text-[#4361ee] shadow-sm'
-                            : 'text-slate-500 hover:text-slate-700'
+                            : 'text-gray-500 hover:text-gray-700'
                             }`}
                     >
                         Technician
@@ -143,9 +143,9 @@ const Login = () => {
                 {/* Login Form */}
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1.5">Username</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Username</label>
                         <div className="relative">
-                            <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <FiUser className="absolute left-3 top-1/2 -trangray-y-1/2 text-gray-400" />
                             <input
                                 type="text"
                                 name="username"
@@ -159,9 +159,9 @@ const Login = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
                         <div className="relative">
-                            <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <FiLock className="absolute left-3 top-1/2 -trangray-y-1/2 text-gray-400" />
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 name="password"
@@ -174,7 +174,7 @@ const Login = () => {
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#4361ee] transition-colors"
+                                className="absolute right-3 top-1/2 -trangray-y-1/2 text-gray-400 hover:text-[#4361ee] transition-colors"
                             >
                                 {showPassword ? <FiEyeOff /> : <FiEye />}
                             </button>
@@ -186,10 +186,10 @@ const Login = () => {
                     </button>
                 </form>
 
-                <div className="mt-4 pt-4 border-t border-slate-200/50 text-center">
-                    <p className="text-xs text-slate-400">
+                <div className="mt-4 pt-4 border-t border-gray-200/50 text-center">
+                    <p className="text-xs text-gray-400">
                         Application Developed and maintained by
-                        <Link to={"https://ateliertechnologysolutions.com/"} target='_blank' className="font-medium text-slate-600 ml-1 mt-1 block">Atelier Technology Solutions</Link>
+                        <Link to={"https://ateliertechnologysolutions.com/"} target='_blank' className="font-medium text-gray-600 ml-1 mt-1 block">Atelier Technology Solutions</Link>
                     </p>
                 </div>
             </div>

@@ -50,38 +50,38 @@ const OutsourceStats = () => {
         <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
             {/* Header */}
             <div>
-                <h1 className="text-2xl font-bold text-slate-800">3rd Party Statistics</h1>
-                <p className="text-slate-500 text-sm mt-1">Overview of external technician performance and costs</p>
+                <h1 className="text-2xl font-bold text-gray-800">3rd Party Statistics</h1>
+                <p className="text-gray-500 text-sm mt-1">Overview of external technician performance and costs</p>
             </div>
 
             {/* Stat Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* Monthly Jobs Card */}
                 {/* Monthly Jobs Card */}
-                <div className="card p-4 flex flex-col justify-between relative overflow-hidden group">
+                <div className="card p-4 h-full flex flex-col justify-between relative group">
                     <div className="flex justify-between items-start">
                         <div className="flex items-center gap-3 z-10">
                             <div className="rounded-xl bg-indigo-50 p-3 text-indigo-600">
                                 <FiCalendar className="w-6 h-6" />
                             </div>
-                            <h3 className="text-2xl font-bold text-slate-800">{monthlyJobCount}</h3>
+                            <h3 className="text-2xl font-bold text-gray-800">{monthlyJobCount}</h3>
                         </div>
                     </div>
 
-                    <div className="z-10 mt-2 flex items-center justify-between">
-                        <p className="text-slate-500 text-sm font-medium">Outsource in</p>
-                        <div className="w-28">
+                    <div className="z-20 mt-2 flex items-center justify-between">
+                        <p className="text-gray-500 text-sm font-medium">Outsource in</p>
+                        <div className="w-28 z-20">
                             <Select
                                 value={selectedMonth}
                                 onChange={(val) => setSelectedMonth(val)}
                                 options={months.map((m, i) => ({ label: m, value: i }))}
-                                triggerClassName="border-none bg-transparent shadow-none p-0 h-auto justify-end gap-2 text-slate-500 hover:text-indigo-600 focus:ring-0 text-sm"
+                                triggerClassName="border-none bg-transparent shadow-none p-0 h-auto justify-end gap-2 text-gray-500 hover:text-indigo-600 focus:ring-0 text-sm"
                                 className="min-w-[80px]"
                             />
                         </div>
                     </div>
 
-                    {/* Hover effect decoration container */}
+                    {/* Hover effect decoration container - acts as background */}
                     <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
                         <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-indigo-600 opacity-[0.03] rounded-full group-hover:scale-125 transition-transform duration-700"></div>
                     </div>
@@ -104,9 +104,10 @@ const OutsourceStats = () => {
                         <StatCard
                             value={`₹${totalSpent.toLocaleString()}`}
                             label="Total Expenditure"
-                            icon={BsCurrencyRupee }
+                            icon={BsCurrencyRupee}
                             color="bg-purple-100 text-purple-600"
                             decorationColor="text-purple-600"
+                            className="h-full"
                         />
 
                         {/* Total Outsourced */}
@@ -116,6 +117,7 @@ const OutsourceStats = () => {
                             icon={FiFileText}
                             color="bg-blue-100 text-[#4361ee]"
                             decorationColor="text-[#4361ee]"
+                            className="h-full"
                         />
 
                         {/* Currently Active */}
@@ -125,6 +127,7 @@ const OutsourceStats = () => {
                             icon={FiClock}
                             color="bg-orange-100 text-orange-600"
                             decorationColor="text-orange-600"
+                            className="h-full"
                         />
                     </>
                 )}
@@ -132,21 +135,21 @@ const OutsourceStats = () => {
 
             {/* Technician Leaderboard */}
             <div className="card overflow-hidden">
-                <div className="p-6 border-b border-slate-100">
-                    <h3 className="font-bold text-slate-800">Technician Overview</h3>
+                <div className="p-6 border-b border-gray-100">
+                    <h3 className="font-bold text-gray-800">Technician Overview</h3>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-slate-50 border-b border-slate-200">
+                        <thead className="bg-gray-50 border-b border-gray-200">
                             <tr>
-                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase">Technician / Shop</th>
-                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase">Total Orders</th>
-                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase">Currently Active</th>
-                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase">Total Paid</th>
-                                <th className="text-right py-4 px-6 text-xs font-semibold text-slate-500 uppercase">Last Active</th>
+                                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase">Technician / Shop</th>
+                                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase">Total Orders</th>
+                                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase">Currently Active</th>
+                                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase">Total Paid</th>
+                                <th className="text-right py-4 px-6 text-xs font-semibold text-gray-500 uppercase">Last Active</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-gray-100">
                             {loading ? (
                                 Array.from({ length: 5 }).map((_, i) => (
                                     <tr key={i}>
@@ -159,27 +162,27 @@ const OutsourceStats = () => {
                                 ))
                             ) : technicians.length > 0 ? (
                                 technicians.map((tech) => (
-                                    <tr key={tech.name} className="hover:bg-slate-50/50 transition-colors">
-                                        <td className="py-4 px-6 font-medium text-slate-800">{tech.name}</td>
-                                        <td className="py-4 px-6 text-slate-600">{tech.totalJobs}</td>
+                                    <tr key={tech.name} className="hover:bg-gray-50/50 transition-colors">
+                                        <td className="py-4 px-6 font-medium text-gray-800">{tech.name}</td>
+                                        <td className="py-4 px-6 text-gray-600">{tech.totalJobs}</td>
                                         <td className="py-4 px-6">
                                             {tech.activeJobs > 0 ? (
                                                 <span className="bg-orange-100 text-orange-700 py-1 px-2 rounded text-xs font-bold">
                                                     {tech.activeJobs} Active
                                                 </span>
                                             ) : (
-                                                <span className="text-slate-400 text-sm">-</span>
+                                                <span className="text-gray-400 text-sm">-</span>
                                             )}
                                         </td>
-                                        <td className="py-4 px-6 font-bold text-slate-700">₹{tech.totalCost.toLocaleString()}</td>
-                                        <td className="py-4 px-6 text-right text-slate-500 text-sm">
+                                        <td className="py-4 px-6 font-bold text-gray-700">₹{tech.totalCost.toLocaleString()}</td>
+                                        <td className="py-4 px-6 text-right text-gray-500 text-sm">
                                             {tech.lastActive ? new Date(tech.lastActive).toLocaleDateString() : 'N/A'}
                                         </td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="5" className="py-8 text-center text-slate-500">No outsourcing data available yet.</td>
+                                    <td colSpan="5" className="py-8 text-center text-gray-500">No outsourcing data available yet.</td>
                                 </tr>
                             )}
                         </tbody>

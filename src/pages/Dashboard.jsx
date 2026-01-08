@@ -112,8 +112,8 @@ const Dashboard = () => {
             {/* Page Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
-                    <p className="text-slate-500 text-sm mt-1">
+                    <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
+                    <p className="text-gray-500 text-sm mt-1">
                         Last updated: {new Date().toLocaleString()}
                     </p>
                 </div>
@@ -151,34 +151,35 @@ const Dashboard = () => {
                                 <StatCard
                                     key={index}
                                     {...stat}
+                                    className="h-full"
                                 />
                             ))}
 
                         {user?.role === 'technician' && (
-                            <div className="card p-4 flex flex-col justify-between relative overflow-hidden group">
+                            <div className="card p-4 h-full flex flex-col justify-between relative group">
                                 <div className="flex justify-between items-start">
                                     <div className="flex items-center gap-3 z-10">
                                         <div className="rounded-xl bg-indigo-50 p-3 text-indigo-600">
                                             <FiCalendar className="w-6 h-6" />
                                         </div>
-                                        <h3 className="text-2xl font-bold text-slate-800">{monthlyJobCount}</h3>
+                                        <h3 className="text-2xl font-bold text-gray-800">{monthlyJobCount}</h3>
                                     </div>
                                 </div>
 
-                                <div className="z-10 mt-2 flex items-center justify-between">
-                                    <p className="text-slate-500 text-sm font-medium">Orders in</p>
-                                    <div className="w-28">
+                                <div className="z-20 mt-2 flex items-center justify-between">
+                                    <p className="text-gray-500 text-sm font-medium">Orders in</p>
+                                    <div className="w-28 z-20">
                                         <Select
                                             value={selectedMonth}
                                             onChange={(val) => setSelectedMonth(val)}
                                             options={months.map((m, i) => ({ label: m, value: i }))}
-                                            triggerClassName="border-none bg-transparent shadow-none p-0 h-auto justify-end gap-2 text-slate-500 hover:text-indigo-600 focus:ring-0 text-sm"
+                                            triggerClassName="border-none bg-transparent shadow-none p-0 h-auto justify-end gap-2 text-gray-500 hover:text-indigo-600 focus:ring-0 text-sm"
                                             className="min-w-[80px]"
                                         />
                                     </div>
                                 </div>
 
-                                {/* Hover effect decoration container */}
+                                {/* Hover effect decoration container - acts as background */}
                                 <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
                                     <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-indigo-600 opacity-[0.03] rounded-full group-hover:scale-125 transition-transform duration-700"></div>
                                 </div>
@@ -194,7 +195,7 @@ const Dashboard = () => {
                     {/* Main Area Chart */}
                     <div className="card p-6 lg:col-span-2 flex flex-col">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="font-bold text-slate-800 text-lg">Sales & Profit Overview</h3>
+                            <h3 className="font-bold text-gray-800 text-lg">Sales & Profit Overview</h3>
                             <div className="w-32">
                                 <Select
                                     value={chartPeriod}
@@ -203,7 +204,7 @@ const Dashboard = () => {
                                         { value: 'year', label: 'This Year' },
                                         { value: 'month', label: 'This Month' }
                                     ]}
-                                    triggerClassName="focus:ring-0 focus:border-slate-200 shadow-sm"
+                                    triggerClassName="focus:ring-0 focus:border-gray-200 shadow-sm"
                                 />
                             </div>
                         </div>
@@ -271,7 +272,7 @@ const Dashboard = () => {
                     {/* Pie Chart */}
                     <div className="card p-6 flex flex-col">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="font-bold text-slate-800 text-lg">By Category</h3>
+                            <h3 className="font-bold text-gray-800 text-lg">By Category</h3>
                             <div className="w-32">
                                 <Select
                                     value={chartPeriod}
@@ -280,7 +281,7 @@ const Dashboard = () => {
                                         { value: 'year', label: 'This Year' },
                                         { value: 'month', label: 'This Month' }
                                     ]}
-                                    triggerClassName="focus:ring-0 focus:border-slate-200 shadow-sm"
+                                    triggerClassName="focus:ring-0 focus:border-gray-200 shadow-sm"
                                 />
                             </div>
                         </div>
@@ -310,7 +311,7 @@ const Dashboard = () => {
                                             verticalAlign="bottom"
                                             height={36}
                                             iconType="circle"
-                                            formatter={(value) => <span className="text-slate-600 text-sm font-medium ml-1">{value}</span>}
+                                            formatter={(value) => <span className="text-gray-600 text-sm font-medium ml-1">{value}</span>}
                                         />
                                     </PieChart>
                                 </ResponsiveContainer>
@@ -318,10 +319,10 @@ const Dashboard = () => {
                             {/* Center Label */}
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-8">
                                 <div className="text-center">
-                                    <p className="text-2xl font-bold text-slate-800">
+                                    <p className="text-2xl font-bold text-gray-800">
                                         {pieData.reduce((sum, item) => sum + (item.value || 0), 0)}
                                     </p>
-                                    <p className="text-xs text-slate-400">Total Items</p>
+                                    <p className="text-xs text-gray-400">Total Items</p>
                                 </div>
                             </div>
                         </div>
@@ -335,7 +336,7 @@ const Dashboard = () => {
                     {/* Today's Deliveries */}
                     <div className="card p-6 h-full">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+                            <h3 className="font-bold text-gray-800 text-lg flex items-center gap-2">
                                 <FiCalendar className="text-blue-500" />
                                 Today's Deliveries
                             </h3>
@@ -346,7 +347,7 @@ const Dashboard = () => {
                         <div className="space-y-3">
                             {jobsLoading ? (
                                 Array.from({ length: 3 }).map((_, i) => (
-                                    <div key={i} className="flex items-center justify-between p-4 border border-slate-100 rounded-xl">
+                                    <div key={i} className="flex items-center justify-between p-4 border border-gray-100 rounded-xl">
                                         <div className="space-y-2">
                                             <Skeleton className="h-4 w-32" />
                                             <Skeleton className="h-3 w-40" />
@@ -355,17 +356,17 @@ const Dashboard = () => {
                                     </div>
                                 ))
                             ) : todayDeliveryJobs.length === 0 ? (
-                                <div className="text-center py-10 text-slate-400 text-sm border-2 border-dashed border-slate-100 rounded-xl bg-slate-50/50">
+                                <div className="text-center py-10 text-gray-400 text-sm border-2 border-dashed border-gray-100 rounded-xl bg-gray-50/50">
                                     No deliveries scheduled for today
                                 </div>
                             ) : (
                                 todayDeliveryJobs.map(job => (
-                                    <div key={job.id} className="group flex items-center justify-between p-4 bg-white border border-slate-100 rounded-xl hover:border-blue-200 hover:shadow-sm transition-all">
+                                    <div key={job.id} className="group flex items-center justify-between p-4 bg-white border border-gray-100 rounded-xl hover:border-blue-200 hover:shadow-sm transition-all">
                                         <div>
-                                            <p className="font-semibold text-slate-700 capitalize text-sm">{job.customerName}</p>
-                                            <p className="text-slate-400 text-xs mt-0.5 flex items-center gap-1">
+                                            <p className="font-semibold text-gray-700 capitalize text-sm">{job.customerName}</p>
+                                            <p className="text-gray-400 text-xs mt-0.5 flex items-center gap-1">
                                                 {job.device}
-                                                <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+                                                <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
                                                 #{(job.jobId || job.id || job._id || '').toString().slice(-4)}
                                             </p>
                                         </div>
@@ -381,7 +382,7 @@ const Dashboard = () => {
                     {/* Recent Orders */}
                     <div className="card p-6 h-full">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+                            <h3 className="font-bold text-gray-800 text-lg flex items-center gap-2">
                                 <FiFileText className="text-blue-500" />
                                 Recent Orders
                             </h3>
@@ -399,22 +400,22 @@ const Dashboard = () => {
                                     </div>
                                 ))
                             ) : recentJobs.length === 0 ? (
-                                <p className="text-slate-400 text-sm text-center py-8">No recent activity.</p>
+                                <p className="text-gray-400 text-sm text-center py-8">No recent activity.</p>
                             ) : (
                                 recentJobs.map(job => (
-                                    <div key={job.id} className="flex items-center gap-4 p-2 hover:bg-slate-50 rounded-lg transition-colors -mx-2">
-                                        <div className="w-10 h-10 uppercase rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-sm font-bold border border-slate-200 shrink-0">
+                                    <div key={job.id} className="flex items-center gap-4 p-2 hover:bg-gray-50 rounded-lg transition-colors -mx-2">
+                                        <div className="w-10 h-10 uppercase rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-sm font-bold border border-gray-200 shrink-0">
                                             {job.customerName.charAt(0)}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between items-start mb-0.5">
-                                                <p className="font-semibold text-slate-700 capitalize text-sm truncate">{job.customerName}</p>
-                                                <span className="text-xs text-slate-400 whitespace-nowrap">
+                                                <p className="font-semibold text-gray-700 capitalize text-sm truncate">{job.customerName}</p>
+                                                <span className="text-xs text-gray-400 whitespace-nowrap">
                                                     {new Date(job.createdAt || Date.now()).toLocaleDateString()}
                                                 </span>
                                             </div>
                                             <div className="flex justify-between items-center">
-                                                <p className="text-slate-500 text-xs truncate pr-2">{job.device} - {job.issue?.slice(0, 20)}...</p>
+                                                <p className="text-gray-500 text-xs truncate pr-2">{job.device} - {job.issue?.slice(0, 20)}...</p>
                                                 <span className={`text-[10px] px-2 py-0.5 rounded-full capitalize font-medium ${getStatusClass(job.status).replace('border', '')}`}>
                                                     {job.status.replace('-', ' ')}
                                                 </span>

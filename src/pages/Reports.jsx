@@ -25,8 +25,8 @@ const Reports = () => {
         fetchReports();
     }, [year]);
 
-    if (loading) return <div className="p-8 text-center text-slate-500">Loading analytics...</div>;
-    if (!data) return <div className="p-8 text-center text-slate-500">Failed to load data.</div>;
+    if (loading) return <div className="p-8 text-center text-gray-500">Loading analytics...</div>;
+    if (!data) return <div className="p-8 text-center text-gray-500">Failed to load data.</div>;
 
     const { monthlyStats, yearlyStats } = data;
 
@@ -66,8 +66,8 @@ const Reports = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-800">Detailed Analytics</h1>
-                    <p className="text-slate-500 text-sm mt-1">Performance report for {year}</p>
+                    <h1 className="text-2xl font-bold text-gray-800">Detailed Analytics</h1>
+                    <p className="text-gray-500 text-sm mt-1">Performance report for {year}</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <Select
@@ -97,7 +97,7 @@ const Reports = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Revenue vs Cost */}
                 <div className="card p-6 flex flex-col h-[400px]">
-                    <h3 className="font-bold text-slate-800 text-lg mb-6">Financial Overview</h3>
+                    <h3 className="font-bold text-gray-800 text-lg mb-6">Financial Overview</h3>
                     <div className="flex-1 w-full min-h-0">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={monthlyStats}>
@@ -119,7 +119,7 @@ const Reports = () => {
 
                 {/* Orders Trend */}
                 <div className="card p-6 flex flex-col h-[400px]">
-                    <h3 className="font-bold text-slate-800 text-lg mb-6">Order Volume</h3>
+                    <h3 className="font-bold text-gray-800 text-lg mb-6">Order Volume</h3>
                     <div className="flex-1 w-full min-h-0">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={monthlyStats} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -143,12 +143,12 @@ const Reports = () => {
 
             {/* Detailed Table */}
             <div className="card overflow-hidden">
-                <div className="p-6 border-b border-slate-100">
-                    <h3 className="font-bold text-slate-800 text-lg">Monthly Breakdown</h3>
+                <div className="p-6 border-b border-gray-100">
+                    <h3 className="font-bold text-gray-800 text-lg">Monthly Breakdown</h3>
                 </div>
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm text-slate-600">
-                        <thead className="bg-slate-50 text-slate-500 uppercase font-semibold text-xs">
+                    <table className="w-full text-left text-sm text-gray-600">
+                        <thead className="bg-gray-50 text-gray-500 uppercase font-semibold text-xs">
                             <tr>
                                 <th className="px-6 py-4">Month</th>
                                 <th className="px-6 py-4 text-right">Orders Rec.</th>
@@ -158,10 +158,10 @@ const Reports = () => {
                                 <th className="px-6 py-4 text-right">Net Profit</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-gray-100">
                             {monthlyStats.map((row) => (
-                                <tr key={row.month} className="hover:bg-slate-50/50">
-                                    <td className="px-6 py-4 font-medium text-slate-800">{row.month}</td>
+                                <tr key={row.month} className="hover:bg-gray-50/50">
+                                    <td className="px-6 py-4 font-medium text-gray-800">{row.month}</td>
                                     <td className="px-6 py-4 text-right">{row.totalOrders}</td>
                                     <td className="px-6 py-4 text-right text-emerald-600">{row.deliveredOrders}</td>
                                     <td className="px-6 py-4 text-right font-medium">₹{row.revenue.toLocaleString()}</td>
@@ -172,7 +172,7 @@ const Reports = () => {
                                 </tr>
                             ))}
                         </tbody>
-                        <tfoot className="bg-slate-50 font-bold text-slate-800">
+                        <tfoot className="bg-gray-50 font-bold text-gray-800">
                             <tr>
                                 <td className="px-6 py-4">Total</td>
                                 <td className="px-6 py-4 text-right">{yearlyStats.totalOrders}</td>

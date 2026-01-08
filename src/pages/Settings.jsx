@@ -117,13 +117,13 @@ const Settings = () => {
             color: 'bg-amber-50 text-amber-600',
             content: (
                 <div className="card p-6">
-                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
                         <div className="p-2 bg-amber-50 text-amber-600 rounded-lg">
                             <FiSettings className="w-5 h-5" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-slate-800">General Configuration</h3>
-                            <p className="text-slate-500 text-xs">Update your business profile</p>
+                            <h3 className="font-bold text-gray-800">General Configuration</h3>
+                            <p className="text-gray-500 text-xs">Update your business profile</p>
                         </div>
                     </div>
 
@@ -138,7 +138,7 @@ const Settings = () => {
                     <form onSubmit={handleUpdateProfile} className="grid grid-cols-1 gap-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Display Name / Business Name</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Display Name / Business Name</label>
                                 <input
                                     type="text"
                                     className="input-field"
@@ -148,7 +148,7 @@ const Settings = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Username / Email</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Username / Email</label>
                                 <input
                                     type="text"
                                     className="input-field"
@@ -159,11 +159,11 @@ const Settings = () => {
                             </div>
                         </div>
 
-                        <div className="border-t border-slate-100 pt-4 mt-2">
-                            <p className="text-sm font-medium text-slate-700 mb-3">Change Password (Optional)</p>
+                        <div className="border-t border-gray-100 pt-4 mt-2">
+                            <p className="text-sm font-medium text-gray-700 mb-3">Change Password (Optional)</p>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">New Password</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
                                     <input
                                         type="password"
                                         className="input-field"
@@ -191,13 +191,13 @@ const Settings = () => {
             color: 'bg-blue-50 text-[#4361ee]',
             content: (
                 <div className="card p-6">
-                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
                         <div className="p-2 bg-blue-50 text-[#4361ee] rounded-lg">
                             <FiBell className="w-5 h-5" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-slate-800">Notifications</h3>
-                            <p className="text-slate-500 text-xs">Configure how you receive alerts</p>
+                            <h3 className="font-bold text-gray-800">Notifications</h3>
+                            <p className="text-gray-500 text-xs">Configure how you receive alerts</p>
                             <p className="text-orange-500 text-xs mt-1 font-medium">Not enabled for now</p>
                         </div>
                     </div>
@@ -210,12 +210,12 @@ const Settings = () => {
                         ].map((setting, idx) => (
                             <div key={idx} className="flex items-center justify-between py-2 opacity-60 pointer-events-none">
                                 <div>
-                                    <p className="font-medium text-slate-700">{setting.title}</p>
-                                    <p className="text-slate-500 text-xs">{setting.desc}</p>
+                                    <p className="font-medium text-gray-700">{setting.title}</p>
+                                    <p className="text-gray-500 text-xs">{setting.desc}</p>
                                 </div>
                                 <label className="relative inline-flex items-center cursor-not-allowed">
                                     <input type="checkbox" className="sr-only peer" disabled />
-                                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#4361ee]"></div>
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:trangray-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#4361ee]"></div>
                                 </label>
                             </div>
                         ))}
@@ -230,25 +230,25 @@ const Settings = () => {
             color: 'bg-emerald-50 text-emerald-600',
             content: (
                 <div className="card p-6">
-                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
                         <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
                             <FiShield className="w-5 h-5" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-slate-800">Security</h3>
-                            <p className="text-slate-500 text-xs">Protect your account and data</p>
+                            <h3 className="font-bold text-gray-800">Security</h3>
+                            <p className="text-gray-500 text-xs">Protect your account and data</p>
                             <p className="text-orange-500 text-xs mt-1 font-medium">Not enabled for now</p>
                         </div>
                     </div>
 
                     <div className="space-y-3 opacity-60 pointer-events-none">
-                        <button disabled className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all text-left group cursor-not-allowed">
-                            <span className="text-slate-700 font-medium group-hover:text-[#4361ee]">Change Password</span>
-                            <span className="text-slate-400 text-sm">Last changed 30 days ago</span>
+                        <button disabled className="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all text-left group cursor-not-allowed">
+                            <span className="text-gray-700 font-medium group-hover:text-[#4361ee]">Change Password</span>
+                            <span className="text-gray-400 text-sm">Last changed 30 days ago</span>
                         </button>
-                        <button disabled className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all text-left group cursor-not-allowed">
-                            <span className="text-slate-700 font-medium group-hover:text-[#4361ee]">Two-Factor Authentication</span>
-                            <span className="text-slate-400 text-sm">Disabled</span>
+                        <button disabled className="w-full flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all text-left group cursor-not-allowed">
+                            <span className="text-gray-700 font-medium group-hover:text-[#4361ee]">Two-Factor Authentication</span>
+                            <span className="text-gray-400 text-sm">Disabled</span>
                         </button>
                     </div>
                 </div>
@@ -262,14 +262,14 @@ const Settings = () => {
             content: (
                 <div className="space-y-6">
                     <div className="card p-6">
-                        <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+                        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
                                     <FiUser className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-slate-800">User Management</h3>
-                                    <p className="text-slate-500 text-xs">Manage team members (Max 1 Staff)</p>
+                                    <h3 className="font-bold text-gray-800">User Management</h3>
+                                    <p className="text-gray-500 text-xs">Manage team members (Max 1 Staff)</p>
                                 </div>
                             </div>
                             {canAddUser && !showUserForm && (
@@ -289,26 +289,26 @@ const Settings = () => {
 
                         {/* Add User Form */}
                         {showUserForm && (
-                            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6 animate-fade-in relative">
-                                <button onClick={() => setShowUserForm(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6 animate-fade-in relative">
+                                <button onClick={() => setShowUserForm(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
                                     <FiX />
                                 </button>
-                                <h4 className="font-bold text-slate-700 mb-4">Add New User</h4>
+                                <h4 className="font-bold text-gray-700 mb-4">Add New User</h4>
                                 <form onSubmit={handleCreateUser} className="grid grid-cols-1 gap-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                                             <input type="text" className="input-field" required value={newUser.name} onChange={e => setNewUser({ ...newUser, name: e.target.value })} />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Username / Login ID</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Username / Login ID</label>
                                             <input type="text" className="input-field" required value={newUser.username} onChange={e => setNewUser({ ...newUser, username: e.target.value })} />
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="relative">
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
                                             <div className="relative">
                                                 <input
                                                     type={showPassword ? "text" : "password"}
@@ -320,14 +320,14 @@ const Settings = () => {
                                                 <button
                                                     type="button"
                                                     onClick={() => setShowPassword(!showPassword)}
-                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                                                    className="absolute right-3 top-1/2 -trangray-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
                                                 >
                                                     {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
                                                 </button>
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
                                             <select className="input-field" value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })}>
                                                 <option value="technician">Technician</option>
                                                 <option value="admin">Admin</option>
@@ -350,28 +350,28 @@ const Settings = () => {
 
                         <div className="overflow-x-auto">
                             <table className="w-full">
-                                <thead className="bg-slate-50 border-b border-slate-200">
+                                <thead className="bg-gray-50 border-b border-gray-200">
                                     <tr>
-                                        <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">User</th>
-                                        <th className="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Role</th>
-                                        <th className="text-right py-3 px-4 text-xs font-semibold text-slate-500 uppercase">Actions</th>
+                                        <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">User</th>
+                                        <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Role</th>
+                                        <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100">
+                                <tbody className="divide-y divide-gray-100">
                                     {users.map(u => (
                                         <tr key={u._id}>
                                             <td className="py-3 px-4">
-                                                <p className="font-medium text-slate-800">{u.name}</p>
-                                                <p className="text-xs text-slate-400">@{u.username}</p>
+                                                <p className="font-medium text-gray-800">{u.name}</p>
+                                                <p className="text-xs text-gray-400">@{u.username}</p>
                                             </td>
-                                            <td className="py-3 px-4 capitalize text-sm text-slate-600">{u.role}</td>
+                                            <td className="py-3 px-4 capitalize text-sm text-gray-600">{u.role}</td>
                                             <td className="py-3 px-4 text-right">
                                                 {u.role !== 'admin' && (
-                                                    <button onClick={() => handleDeleteUser(u._id)} className="text-slate-400 hover:text-red-500 p-2">
+                                                    <button onClick={() => handleDeleteUser(u._id)} className="text-gray-400 hover:text-red-500 p-2">
                                                         <FiTrash2 />
                                                     </button>
                                                 )}
-                                                {u._id === user?._id && <span className="text-xs text-slate-400 italic">Current User</span>}
+                                                {u._id === user?._id && <span className="text-xs text-gray-400 italic">Current User</span>}
                                             </td>
                                         </tr>
                                     ))}
@@ -388,8 +388,8 @@ const Settings = () => {
         <div className="space-y-6 animate-fade-in max-w-5xl mx-auto">
             {/* Header */}
             <div>
-                <h1 className="text-2xl font-bold text-slate-800">Settings</h1>
-                <p className="text-slate-500 text-sm mt-1">Manage preferences and system configuration</p>
+                <h1 className="text-2xl font-bold text-gray-800">Settings</h1>
+                <p className="text-gray-500 text-sm mt-1">Manage preferences and system configuration</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -401,7 +401,7 @@ const Settings = () => {
                             onClick={() => setActiveTab(item.id)}
                             className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors flex items-center gap-3 ${activeTab === item.id
                                 ? 'bg-blue-50 text-[#4361ee] shadow-sm ring-1 ring-blue-100'
-                                : 'text-slate-600 hover:bg-white hover:text-slate-900'
+                                : 'text-gray-600 hover:bg-white hover:text-gray-900'
                                 }`}
                         >
                             <item.icon className="w-5 h-5" />
@@ -420,7 +420,7 @@ const Settings = () => {
                                     onClick={() => setActiveTab(activeTab === item.id ? '' : item.id)}
                                     className={`w-full flex items-center justify-between p-4 rounded-xl transition-all ${activeTab === item.id
                                         ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
-                                        : 'bg-white text-slate-700 border border-slate-100 shadow-sm'
+                                        : 'bg-white text-gray-700 border border-gray-100 shadow-sm'
                                         }`}
                                 >
                                     <div className="flex items-center gap-3">
@@ -429,7 +429,7 @@ const Settings = () => {
                                         </div>
                                         <span className="font-bold">{item.label}</span>
                                     </div>
-                                    {activeTab === item.id ? <FiChevronDown className="w-5 h-5" /> : <FiChevronRight className="w-5 h-5 text-slate-400" />}
+                                    {activeTab === item.id ? <FiChevronDown className="w-5 h-5" /> : <FiChevronRight className="w-5 h-5 text-gray-400" />}
                                 </button>
                                 {activeTab === item.id && (
                                     <div className="animate-in slide-in-from-top-2 duration-200">

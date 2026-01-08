@@ -316,8 +316,8 @@ const Jobs = () => {
             {/* Header */}
             <div className="flex flex-row items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-800">Orders</h1>
-                    <p className="text-slate-500 text-sm mt-1">Manage all service orders</p>
+                    <h1 className="text-2xl font-bold text-gray-800">Orders</h1>
+                    <p className="text-gray-500 text-sm mt-1">Manage all service orders</p>
                 </div>
                 {['admin', 'technician'].includes(user?.role) && (
                     <button
@@ -343,7 +343,7 @@ const Jobs = () => {
                             onClick={() => setFilterStatus(status)}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all capitalize whitespace-nowrap ${filterStatus === status
                                 ? 'bg-blue-50 text-[#4361ee] ring-1 ring-[#4361ee]/20'
-                                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
                                 }`}
                         >
                             {status === 'all' ? 'All Orders' : status.replace('-', ' ')}
@@ -353,7 +353,7 @@ const Jobs = () => {
 
                 {/* Search within table (Visual only for now) */}
                 <div className="relative w-full sm:w-64">
-                    <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <FiSearch className="absolute left-3 top-1/2 -trangray-y-1/2 text-gray-400" />
                     <input
                         type="text"
                         placeholder="Search in orders..."
@@ -368,31 +368,31 @@ const Jobs = () => {
             <div className="card overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-slate-50 border-b border-slate-200">
+                        <thead className="bg-gray-50 border-b border-gray-200">
                             <tr>
-                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-800 uppercase tracking-wider">Order ID</th>
-                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-800 uppercase tracking-wider">Customer</th>
-                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-800 uppercase tracking-wider">Device</th>
-                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-800 uppercase tracking-wider">Status</th>
-                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-800 uppercase tracking-wider">Delivery</th>
-                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-800 uppercase tracking-wider">Balance</th>
-                                <th className="text-right py-4 px-6 text-xs font-semibold text-slate-800 uppercase tracking-wider">Actions</th>
+                                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-800 uppercase tracking-wider">Order ID</th>
+                                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-800 uppercase tracking-wider">Customer</th>
+                                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-800 uppercase tracking-wider">Device</th>
+                                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-800 uppercase tracking-wider">Status</th>
+                                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-800 uppercase tracking-wider">Delivery</th>
+                                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-800 uppercase tracking-wider">Balance</th>
+                                <th className="text-right py-4 px-6 text-xs font-semibold text-gray-800 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-gray-100">
                             {sortedJobs.map((job) => (
-                                <tr key={job._id || job.id || job.jobId} className="hover:bg-slate-50/50 transition-colors">
+                                <tr key={job._id || job.id || job.jobId} className="hover:bg-gray-50/50 transition-colors">
                                     <td className="py-4 px-6">
-                                        <span className="font-mono text-sm font-medium text-slate-700">#{(job.jobId || job.id || job._id || '').toString().slice(-6)}</span>
+                                        <span className="font-mono text-sm font-medium text-gray-700">#{(job.jobId || job.id || job._id || '').toString().slice(-6)}</span>
                                     </td>
                                     <td className="py-4 px-6">
                                         <div>
-                                            <p className="font-medium text-slate-800 capitalize">{job.customerName}</p>
-                                            <p className="text-slate-500 text-xs">{job.phone}</p>
+                                            <p className="font-medium text-gray-800 capitalize">{job.customerName}</p>
+                                            <p className="text-gray-500 text-xs">{job.phone}</p>
                                         </div>
                                     </td>
                                     <td className="py-4 px-6">
-                                        <p className="text-slate-700 text-sm max-w-[150px]" title={job.device}>{job.device}</p>
+                                        <p className="text-gray-700 text-sm max-w-[150px]" title={job.device}>{job.device}</p>
                                     </td>
                                     <td className="py-4 px-6">
                                         <span className={`status-badge capitalize ${getStatusClass(job.status)}`}>
@@ -423,7 +423,7 @@ const Jobs = () => {
                                         )}
 
                                     </td>
-                                    <td className="py-4 px-6 text-slate-500 text-sm">
+                                    <td className="py-4 px-6 text-gray-500 text-sm">
                                         {new Date(job.estimatedDelivery).toLocaleDateString()}
                                     </td>
                                     <td className="py-4 px-6">
@@ -432,7 +432,7 @@ const Jobs = () => {
                                                 Paid ₹{job.totalAmount}
                                             </span>
                                         ) : (
-                                            <p className="font-semibold text-slate-700 text-sm">
+                                            <p className="font-semibold text-gray-700 text-sm">
                                                 ₹{((parseFloat(job.totalAmount) || 0) - (parseFloat(job.advanceAmount) || 0)).toLocaleString()}
                                             </p>
                                         )}
@@ -442,7 +442,7 @@ const Jobs = () => {
                                             {['admin', 'technician'].includes(user?.role) && (
                                                 <button
                                                     onClick={() => { setViewJob(job); setShowViewModal(true); }}
-                                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                                     title="View Details"
                                                 >
                                                     <FiEye className="w-4 h-4" />
@@ -451,7 +451,7 @@ const Jobs = () => {
                                             {['admin', 'technician'].includes(user?.role) && (
                                                 <button
                                                     onClick={() => handleEdit(job)}
-                                                    className="p-2 text-slate-400 hover:text-[#4361ee] hover:bg-blue-50 rounded-lg transition-colors"
+                                                    className="p-2 text-gray-400 hover:text-[#4361ee] hover:bg-blue-50 rounded-lg transition-colors"
                                                     title="Edit / Update Status"
                                                 >
                                                     <FiEdit2 className="w-4 h-4" />
@@ -461,7 +461,7 @@ const Jobs = () => {
                                                 job.status === 'outsourced' ? (
                                                     <button
                                                         onClick={() => handleReceiveBack(job)}
-                                                        className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                                        className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
                                                         title="Receive Back from 3rd Party"
                                                     >
                                                         <FiCheckSquare className="w-4 h-4" />
@@ -469,7 +469,7 @@ const Jobs = () => {
                                                 ) : (
                                                     <button
                                                         onClick={() => handleOutsource(job)}
-                                                        className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                                        className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                                                         title="Assign to 3rd Party"
                                                     >
                                                         <FiExternalLink className="w-4 h-4" />
@@ -480,7 +480,7 @@ const Jobs = () => {
                                             {['admin', 'technician'].includes(user?.role) && job.status !== 'delivered' && job.status !== 'outsourced' && (
                                                 <button
                                                     onClick={() => handlePayment(job)}
-                                                    className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                                    className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
                                                     title="Get Payment / Deliver"
                                                 >
                                                     <BiRupee className="w-4 h-4" />
@@ -489,7 +489,7 @@ const Jobs = () => {
                                             {user?.role === 'admin' && (
                                                 <button
                                                     onClick={() => handleDelete(job.jobId || job.id)}
-                                                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                                     title="Delete Order"
                                                 >
                                                     <FiTrash2 className="w-4 h-4" />
@@ -505,7 +505,7 @@ const Jobs = () => {
                     {loading && (
                         <div className="p-0">
                             {Array.from({ length: 5 }).map((_, i) => (
-                                <div key={i} className="flex items-center justify-between p-4 border-b border-slate-50">
+                                <div key={i} className="flex items-center justify-between p-4 border-b border-gray-50">
                                     <Skeleton className="h-4 w-16" />
                                     <div className="space-y-2">
                                         <Skeleton className="h-4 w-32" />
@@ -522,11 +522,11 @@ const Jobs = () => {
                     )}
                     {sortedJobs.length === 0 && (
                         <div className="text-center py-16">
-                            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <FiFilter className="w-8 h-8 text-slate-300" />
+                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <FiFilter className="w-8 h-8 text-gray-300" />
                             </div>
-                            <p className="text-slate-500 font-medium">No orders found</p>
-                            <p className="text-slate-400 text-sm">Try adjusting your filters</p>
+                            <p className="text-gray-500 font-medium">No orders found</p>
+                            <p className="text-gray-400 text-sm">Try adjusting your filters</p>
                         </div>
                     )}
                 </div>
@@ -542,19 +542,19 @@ const Jobs = () => {
                     {/* Form sections similar to previous but with updated classes */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-4">
-                            <h4 className="font-semibold text-slate-900 text-sm uppercase tracking-wide">Customer Info</h4>
+                            <h4 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">Customer Info</h4>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Customer Name</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
                                 <input type="text" name="customerName" value={formData.customerName} onChange={handleChange} className="input-field" required />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                                 <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="input-field" required />
                             </div>
                         </div>
 
                         <div className="space-y-4">
-                            <h4 className="font-semibold text-slate-900 text-sm uppercase tracking-wide">Device Details</h4>
+                            <h4 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">Device Details</h4>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <CreatableSelect
@@ -575,7 +575,7 @@ const Jobs = () => {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Model Name/No.</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Model Name/No.</label>
                                     <input
                                         type="text"
                                         name="model"
@@ -587,7 +587,7 @@ const Jobs = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Assigned Tech</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Assigned Tech</label>
                                     <input
                                         type="text"
                                         name="technician"
@@ -602,17 +602,17 @@ const Jobs = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Issue Description</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Issue Description</label>
                         <textarea name="issue" value={formData.issue} onChange={handleChange} className="input-field min-h-[100px]" required></textarea>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Received Date</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Received Date</label>
                             <input type="date" name="receivedDate" value={formData.receivedDate} onChange={handleChange} className="input-field" required />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Estimated Delivery</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Delivery</label>
                             <input
                                 type="date"
                                 name="estimatedDelivery"
@@ -625,26 +625,26 @@ const Jobs = () => {
                         </div>
                     </div>
 
-                    <div className="bg-slate-50 p-4 rounded-xl space-y-4 border border-slate-100">
-                        <h4 className="font-semibold text-slate-900 text-sm uppercase tracking-wide">Billing Information</h4>
+                    <div className="bg-gray-50 p-4 rounded-xl space-y-4 border border-gray-100">
+                        <h4 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">Billing Information</h4>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Total Amount</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Total Amount</label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
+                                    <span className="absolute left-3 top-1/2 -trangray-y-1/2 text-gray-400">₹</span>
                                     <input type="number" name="totalAmount" value={formData.totalAmount} onChange={handleChange} className="input-field !pl-6" required />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Advance</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Advance</label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
+                                    <span className="absolute left-3 top-1/2 -trangray-y-1/2 text-gray-400">₹</span>
                                     <input type="number" name="advanceAmount" value={formData.advanceAmount} onChange={handleChange} className="input-field !pl-6" />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Balance Pending</label>
-                                <div className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-slate-700 font-bold">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Balance Pending</label>
+                                <div className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 text-gray-700 font-bold">
                                     ₹{(parseFloat(formData.totalAmount) || 0) - (parseFloat(formData.advanceAmount) || 0)}
                                 </div>
                             </div>
@@ -652,7 +652,7 @@ const Jobs = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Current Status</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Current Status</label>
                         <Select
                             value={formData.status}
                             onChange={(val) => handleChange({ target: { name: 'status', value: val } })}
@@ -666,7 +666,7 @@ const Jobs = () => {
                         />
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
                         <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">Cancel</button>
                         <button type="submit" className="btn-primary flex items-center gap-2">
                             <FiSave />
@@ -705,7 +705,7 @@ const Jobs = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                         <input
                             type="tel"
                             className="input-field"
@@ -716,9 +716,9 @@ const Jobs = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Cost / Amount Paid</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Cost / Amount Paid</label>
                         <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
+                            <span className="absolute left-3 top-1/2 -trangray-y-1/2 text-gray-400">₹</span>
                             <input
                                 ref={costInputRef}
                                 type="number"
@@ -729,10 +729,10 @@ const Jobs = () => {
                                 onChange={(e) => setOutsourceData({ ...outsourceData, cost: e.target.value })}
                             />
                         </div>
-                        <p className="text-xs text-slate-500 mt-1">This is the cost paid to the 3rd party, not the customer price.</p>
+                        <p className="text-xs text-gray-500 mt-1">This is the cost paid to the 3rd party, not the customer price.</p>
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
                         <button type="button" onClick={() => setShowOutsourceModal(false)} className="btn-secondary">Cancel</button>
                         <button type="submit" className="btn-primary bg-purple-600 hover:bg-purple-700 shadow-purple-200">
                             Confirm Assignment
@@ -748,12 +748,12 @@ const Jobs = () => {
                 title="Receive Device from 3rd Party"
             >
                 <form onSubmit={submitReceiveBack} className="space-y-6">
-                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm text-slate-600 mb-4">
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm text-gray-600 mb-4">
                         Confirming return of <b>{receivingJob?.device}</b> from <b>{receivingJob?.outsourced?.name}</b>.
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Repair Outcome (New Status)</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Repair Outcome (New Status)</label>
                         <Select
                             value={receiveData.status}
                             onChange={(val) => setReceiveData({ ...receiveData, status: val })}
@@ -766,9 +766,9 @@ const Jobs = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Final 3rd Party Cost</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Final 3rd Party Cost</label>
                         <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
+                            <span className="absolute left-3 top-1/2 -trangray-y-1/2 text-gray-400">₹</span>
                             <input
                                 type="number"
                                 required
@@ -777,10 +777,10 @@ const Jobs = () => {
                                 onChange={(e) => setReceiveData({ ...receiveData, cost: e.target.value })}
                             />
                         </div>
-                        <p className="text-xs text-slate-500 mt-1">Adjust if the final amount paid differs from the estimate.</p>
+                        <p className="text-xs text-gray-500 mt-1">Adjust if the final amount paid differs from the estimate.</p>
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
                         <button type="button" onClick={() => setShowReceiveModal(false)} className="btn-secondary">Cancel</button>
                         <button type="submit" className="btn-primary flex items-center gap-2">
                             <FiCheckSquare /> Confirm Return
@@ -796,30 +796,30 @@ const Jobs = () => {
                 title="Get Payment & Deliver Order"
             >
                 <form onSubmit={submitPayment} className="space-y-6">
-                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-2">
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2">
                         <div className="flex justify-between text-sm">
-                            <span className="text-slate-500">Total Order Amount:</span>
+                            <span className="text-gray-500">Total Order Amount:</span>
                             <span className="font-semibold">₹{parseFloat(paymentJob?.totalAmount || 0).toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                            <span className="text-slate-500">Advance Paid:</span>
+                            <span className="text-gray-500">Advance Paid:</span>
                             <span className="font-semibold text-green-600">- ₹{parseFloat(paymentJob?.advanceAmount || 0).toLocaleString()}</span>
                         </div>
-                        <div className="flex justify-between text-base border-t border-slate-200 pt-2 mt-2">
-                            <span className="font-bold text-slate-800">Pending Balance:</span>
-                            <span className="font-bold text-slate-800">₹{((parseFloat(paymentJob?.totalAmount || 0) - parseFloat(paymentJob?.advanceAmount || 0))).toLocaleString()}</span>
+                        <div className="flex justify-between text-base border-t border-gray-200 pt-2 mt-2">
+                            <span className="font-bold text-gray-800">Pending Balance:</span>
+                            <span className="font-bold text-gray-800">₹{((parseFloat(paymentJob?.totalAmount || 0) - parseFloat(paymentJob?.advanceAmount || 0))).toLocaleString()}</span>
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">Payment Type</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Payment Type</label>
                         <div className="grid grid-cols-2 gap-3">
                             <button
                                 type="button"
                                 onClick={() => setPaymentData({ ...paymentData, type: 'full', discountAmount: '' })}
                                 className={`p-3 rounded-lg border text-sm font-medium transition-all ${paymentData.type === 'full'
                                     ? 'border-emerald-500 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500'
-                                    : 'border-slate-200 hover:border-slate-300 text-slate-600'
+                                    : 'border-gray-200 hover:border-gray-300 text-gray-600'
                                     }`}
                             >
                                 Paid Full
@@ -829,7 +829,7 @@ const Jobs = () => {
                                 onClick={() => setPaymentData({ ...paymentData, type: 'discount' })}
                                 className={`p-3 rounded-lg border text-sm font-medium transition-all ${paymentData.type === 'discount'
                                     ? 'border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500'
-                                    : 'border-slate-200 hover:border-slate-300 text-slate-600'
+                                    : 'border-gray-200 hover:border-gray-300 text-gray-600'
                                     }`}
                             >
                                 Paid with Discount
@@ -840,9 +840,9 @@ const Jobs = () => {
                     {paymentData.type === 'discount' && (
                         <div className="animate-fade-in space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Discount Amount</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Discount Amount</label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
+                                    <span className="absolute left-3 top-1/2 -trangray-y-1/2 text-gray-400">₹</span>
                                     <input
                                         type="number"
                                         required
@@ -866,7 +866,7 @@ const Jobs = () => {
                         </div>
                     )}
 
-                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
                         <button type="button" onClick={() => setShowPaymentModal(false)} className="btn-secondary">Cancel</button>
                         <button type="submit" className="btn-primary flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200">
                             <FiCheckSquare />
@@ -890,10 +890,10 @@ const Jobs = () => {
                 {viewJob && (
                     <div className="space-y-6">
                         {/* Header Info */}
-                        <div className="flex justify-between items-start bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <div className="flex justify-between items-start bg-gray-50 p-4 rounded-xl border border-gray-100">
                             <div>
-                                <h3 className="font-bold text-lg text-slate-800">Order #{(viewJob.jobId || viewJob.id || viewJob._id || '').toString().slice(-6)}</h3>
-                                <p className="text-slate-500 text-sm">Created on {new Date(viewJob.createdAt).toLocaleDateString()}</p>
+                                <h3 className="font-bold text-lg text-gray-800">Order #{(viewJob.jobId || viewJob.id || viewJob._id || '').toString().slice(-6)}</h3>
+                                <p className="text-gray-500 text-sm">Created on {new Date(viewJob.createdAt).toLocaleDateString()}</p>
                             </div>
                             <span className={`status-badge capitalize ${getStatusClass(viewJob.status)}`}>
                                 {viewJob.status.replace('-', ' ')}
@@ -903,26 +903,26 @@ const Jobs = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Customer & Device */}
                             <div className="space-y-4">
-                                <div className="card p-4 border border-slate-100 shadow-none">
-                                    <h4 className="font-semibold text-slate-700 mb-3 text-sm uppercase tracking-wide">Information</h4>
+                                <div className="card p-4 border border-gray-100 shadow-none">
+                                    <h4 className="font-semibold text-gray-700 mb-3 text-sm uppercase tracking-wide">Information</h4>
                                     <div className="space-y-2 text-sm">
-                                        <div className="flex justify-between"><span className="text-slate-500">Customer:</span> <span className="font-medium text-slate-800">{viewJob.customerName}</span></div>
-                                        <div className="flex justify-between"><span className="text-slate-500">Phone:</span> <span className="font-medium text-slate-800">{viewJob.phone}</span></div>
-                                        <div className="flex justify-between"><span className="text-slate-500">Device:</span> <span className="font-medium text-slate-800">{viewJob.device}</span></div>
-                                        <div className="flex justify-between"><span className="text-slate-500">Technician:</span> <span className="font-medium text-slate-800">{viewJob.technician || 'Unassigned'}</span></div>
+                                        <div className="flex justify-between"><span className="text-gray-500">Customer:</span> <span className="font-medium text-gray-800">{viewJob.customerName}</span></div>
+                                        <div className="flex justify-between"><span className="text-gray-500">Phone:</span> <span className="font-medium text-gray-800">{viewJob.phone}</span></div>
+                                        <div className="flex justify-between"><span className="text-gray-500">Device:</span> <span className="font-medium text-gray-800">{viewJob.device}</span></div>
+                                        <div className="flex justify-between"><span className="text-gray-500">Technician:</span> <span className="font-medium text-gray-800">{viewJob.technician || 'Unassigned'}</span></div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Financials */}
                             <div className="space-y-4">
-                                <div className="card p-4 border border-slate-100 shadow-none">
-                                    <h4 className="font-semibold text-slate-700 mb-3 text-sm uppercase tracking-wide">Financials</h4>
+                                <div className="card p-4 border border-gray-100 shadow-none">
+                                    <h4 className="font-semibold text-gray-700 mb-3 text-sm uppercase tracking-wide">Financials</h4>
                                     <div className="space-y-2 text-sm">
-                                        <div className="flex justify-between"><span className="text-slate-500">Total Amount:</span> <span className="font-medium text-slate-800">₹{parseFloat(viewJob.totalAmount || 0).toLocaleString()}</span></div>
-                                        <div className="flex justify-between"><span className="text-slate-500">Advance Paid:</span> <span className="font-medium text-emerald-600">-₹{parseFloat(viewJob.advanceAmount || 0).toLocaleString()}</span></div>
-                                        <div className="pt-2 border-t border-slate-100 flex justify-between font-bold">
-                                            <span className="text-slate-700">Balance:</span>
+                                        <div className="flex justify-between"><span className="text-gray-500">Total Amount:</span> <span className="font-medium text-gray-800">₹{parseFloat(viewJob.totalAmount || 0).toLocaleString()}</span></div>
+                                        <div className="flex justify-between"><span className="text-gray-500">Advance Paid:</span> <span className="font-medium text-emerald-600">-₹{parseFloat(viewJob.advanceAmount || 0).toLocaleString()}</span></div>
+                                        <div className="pt-2 border-t border-gray-100 flex justify-between font-bold">
+                                            <span className="text-gray-700">Balance:</span>
                                             <span>₹{((parseFloat(viewJob.totalAmount || 0) - parseFloat(viewJob.advanceAmount || 0))).toLocaleString()}</span>
                                         </div>
                                     </div>
@@ -946,25 +946,25 @@ const Jobs = () => {
                         )}
 
                         {/* Status Timeline */}
-                        <div className="border-t border-slate-100 pt-6">
-                            <h4 className="font-semibold text-slate-800 mb-4">Status History</h4>
-                            <div className="space-y-6 relative before:absolute before:left-[7px] before:top-2 before:h-full before:w-[2px] before:bg-slate-100">
+                        <div className="border-t border-gray-100 pt-6">
+                            <h4 className="font-semibold text-gray-800 mb-4">Status History</h4>
+                            <div className="space-y-6 relative before:absolute before:left-[7px] before:top-2 before:h-full before:w-[2px] before:bg-gray-100">
                                 {viewJob.statusHistory && viewJob.statusHistory.length > 0 ? (
                                     [...viewJob.statusHistory].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).map((history, idx) => (
                                         <div key={idx} className="relative pl-8">
                                             <div className="absolute left-0 top-1.5 w-4 h-4 rounded-full bg-white border-2 border-blue-500 z-10"></div>
                                             <div className="flex flex-col">
-                                                <span className="font-medium text-slate-800 capitalize text-sm">{history.status.replace('-', ' ')}</span>
-                                                <span className="text-xs text-slate-400">{new Date(history.timestamp).toLocaleString()}</span>
-                                                {history.note && <p className="text-xs text-slate-500 mt-0.5">{history.note}</p>}
+                                                <span className="font-medium text-gray-800 capitalize text-sm">{history.status.replace('-', ' ')}</span>
+                                                <span className="text-xs text-gray-400">{new Date(history.timestamp).toLocaleString()}</span>
+                                                {history.note && <p className="text-xs text-gray-500 mt-0.5">{history.note}</p>}
                                             </div>
                                         </div>
                                     ))
                                 ) : (
                                     <div className="relative pl-8">
-                                        <div className="absolute left-0 top-1.5 w-4 h-4 rounded-full bg-white border-2 border-slate-300 z-10"></div>
-                                        <p className="text-sm text-slate-500">Current Status: <span className="font-medium capitalize">{viewJob.status.replace('-', ' ')}</span></p>
-                                        <p className="text-xs text-slate-400">History tracking started recently.</p>
+                                        <div className="absolute left-0 top-1.5 w-4 h-4 rounded-full bg-white border-2 border-gray-300 z-10"></div>
+                                        <p className="text-sm text-gray-500">Current Status: <span className="font-medium capitalize">{viewJob.status.replace('-', ' ')}</span></p>
+                                        <p className="text-xs text-gray-400">History tracking started recently.</p>
                                     </div>
                                 )}
                             </div>

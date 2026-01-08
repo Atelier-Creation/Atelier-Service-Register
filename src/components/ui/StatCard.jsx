@@ -20,12 +20,12 @@ const StatCard = ({
                             <Icon className="w-6 h-6" />
                         )}
                     </div>
-                    <h3 className="text-2xl font-bold text-slate-800">{value}</h3>
+                    <h3 className="text-2xl font-bold text-gray-800">{value}</h3>
                 </div>
                 {onClick && (
                     <button
                         onClick={onClick}
-                        className="w-8 h-8 rounded-full bg-white border border-slate-100 shadow-sm flex items-center justify-center text-slate-600 hover:text-blue-600 hover:border-blue-200 transform group-hover:translate-x-1 transition-all z-20"
+                        className="w-8 h-8 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-200 transform group-hover:trangray-x-1 transition-all z-20"
                     >
                         <FiArrowRight className="w-4 h-4" />
                     </button>
@@ -33,7 +33,7 @@ const StatCard = ({
             </div>
 
             <div className="z-10 mt-2">
-                <p className="text-slate-500 text-sm font-medium">{label}</p>
+                <p className="text-gray-500 text-sm font-medium">{label}</p>
             </div>
 
             {/* Subtle background decoration */}
