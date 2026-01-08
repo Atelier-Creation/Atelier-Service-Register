@@ -1,6 +1,6 @@
 import { useJobs } from '../context/JobContext';
 import { useAuth } from '../context/AuthContext';
-import { FiFileText, FiCalendar } from 'react-icons/fi';
+import { FiFileText, FiCalendar, FiUsers, FiBox, FiDollarSign } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -77,7 +77,7 @@ const Dashboard = () => {
             title: 'Total Orders',
             value: stats.total,
             label: 'Number of orders',
-            icon: '/totalorders.gif',
+            icon: FiFileText,
             color: 'bg-blue-100 text-blue-600',
             decorationColor: 'text-blue-600',
         },
@@ -85,7 +85,7 @@ const Dashboard = () => {
             title: 'Active Customers',
             value: stats.total || 0, // Placeholder
             label: 'Registered customers',
-            icon: '/coustomers.gif',
+            icon: FiUsers,
             color: 'bg-indigo-100 text-indigo-600',
             decorationColor: 'text-indigo-600',
         },
@@ -93,7 +93,7 @@ const Dashboard = () => {
             title: 'Ready to Deliver',
             value: stats.statusCounts?.ready || 0,
             label: 'Available for pickup',
-            icon: '/avilableforpickup.gif',
+            icon: FiBox,
             color: 'bg-emerald-100 text-emerald-600',
             decorationColor: 'text-emerald-600',
         },
@@ -101,7 +101,7 @@ const Dashboard = () => {
             title: 'Total Revenue',
             value: `₹${stats.totalEarnings.toLocaleString()}`,
             label: 'Revenue generated',
-            icon: '/totalrevenue.gif',
+            icon: FiDollarSign,
             color: 'bg-amber-100 text-amber-600',
             decorationColor: 'text-amber-600',
         },
@@ -158,8 +158,8 @@ const Dashboard = () => {
                             <div className="card p-4 flex flex-col justify-between relative overflow-hidden group">
                                 <div className="flex justify-between items-start">
                                     <div className="flex items-center gap-3 z-10">
-                                        <div className="rounded-xl">
-                                            <img src='/calendar.gif' alt="calendar" className="w-12 h-12 object-contain" />
+                                        <div className="rounded-xl bg-indigo-50 p-3 text-indigo-600">
+                                            <FiCalendar className="w-6 h-6" />
                                         </div>
                                         <h3 className="text-2xl font-bold text-slate-800">{monthlyJobCount}</h3>
                                     </div>

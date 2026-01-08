@@ -13,11 +13,11 @@ const StatCard = ({
         <div className={`card p-4 flex flex-col justify-between relative overflow-hidden group ${className}`}>
             <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3 z-10">
-                    <div className={`rounded-xl ${typeof Icon === 'string' ? '' : `p-2 ${color}`}`}>
+                    <div className={`rounded-xl ${typeof Icon === 'string' ? '' : `p-3 ${color}`}`}>
                         {typeof Icon === 'string' ? (
                             <img src={Icon} alt={label} className="w-12 h-12 object-contain" />
                         ) : (
-                            <Icon className="w-5 h-5" />
+                            <Icon className="w-6 h-6" />
                         )}
                     </div>
                     <h3 className="text-2xl font-bold text-slate-800">{value}</h3>

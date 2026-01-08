@@ -699,8 +699,6 @@ const Jobs = () => {
                                     name: val,
                                     phone: existing ? existing.phone : (outsourceData.phone || '')
                                 });
-                                // Focus subsequent field
-                                setTimeout(() => costInputRef.current?.focus(), 100);
                             }}
                             placeholder="Select or Create Vendor"
                         />

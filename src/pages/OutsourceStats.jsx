@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useJobs } from '../context/JobContext';
 import api from '../api/client';
-import { FiClock } from 'react-icons/fi';
+import { FiClock, FiFileText, FiCalendar } from 'react-icons/fi';
+import { BsCurrencyRupee } from "react-icons/bs";
 import Select from '../components/ui/Select';
 import StatCard from '../components/ui/StatCard';
 import { Skeleton } from '../components/ui/Skeleton';
@@ -60,8 +61,8 @@ const OutsourceStats = () => {
                 <div className="card p-4 flex flex-col justify-between relative overflow-hidden group">
                     <div className="flex justify-between items-start">
                         <div className="flex items-center gap-3 z-10">
-                            <div className="rounded-xl">
-                                <img src='/calendar.gif' alt="calendar" className="w-12 h-12 object-contain" />
+                            <div className="rounded-xl bg-indigo-50 p-3 text-indigo-600">
+                                <FiCalendar className="w-6 h-6" />
                             </div>
                             <h3 className="text-2xl font-bold text-slate-800">{monthlyJobCount}</h3>
                         </div>
@@ -103,7 +104,7 @@ const OutsourceStats = () => {
                         <StatCard
                             value={`₹${totalSpent.toLocaleString()}`}
                             label="Total Expenditure"
-                            icon="/rupee.gif"
+                            icon={BsCurrencyRupee }
                             color="bg-purple-100 text-purple-600"
                             decorationColor="text-purple-600"
                         />
@@ -112,7 +113,7 @@ const OutsourceStats = () => {
                         <StatCard
                             value={totalOutsourcedCount}
                             label="Total Outsourced Orders"
-                            icon="/totalorders.gif"
+                            icon={FiFileText}
                             color="bg-blue-100 text-[#4361ee]"
                             decorationColor="text-[#4361ee]"
                         />
@@ -121,7 +122,7 @@ const OutsourceStats = () => {
                         <StatCard
                             value={currentActiveOutsourced}
                             label="Currently With 3rd Party"
-                            icon="service.gif"
+                            icon={FiClock}
                             color="bg-orange-100 text-orange-600"
                             decorationColor="text-orange-600"
                         />

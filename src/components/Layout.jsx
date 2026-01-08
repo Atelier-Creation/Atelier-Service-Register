@@ -143,17 +143,17 @@ const Layout = () => {
                             <input
                                 type="text"
                                 placeholder="Search jobs, customers..."
-                                className="w-full bg-slate-50 border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-blue-500/10 text-slate-600 placeholder-slate-400"
+                                className="w-full bg-slate-50 border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:outline-0 focus:ring-blue-400 text-slate-600 placeholder-slate-400"
                             />
-                            <span className="absolute right-3 text-xs text-slate-400 border border-slate-200 rounded px-1.5 py-0.5">⌘K</span>
+                            {/* <span className="absolute right-3 text-xs text-slate-400 border border-slate-200 rounded px-1.5 py-0.5">⌘K</span> */}
                         </div>
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <button className="relative p-2 text-slate-400 hover:text-[#4361ee] hover:bg-blue-50 rounded-full transition-colors">
+                        {/* <button className="relative p-2 text-slate-400 hover:text-[#4361ee] hover:bg-blue-50 rounded-full transition-colors">
                             <FiBell className="w-5 h-5" />
                             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-                        </button>
+                        </button> */}
 
                         <div className="h-8 w-px bg-slate-200 mx-1"></div>
 
