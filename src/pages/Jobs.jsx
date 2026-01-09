@@ -93,7 +93,8 @@ const Jobs = () => {
         setPaymentData({
             type: 'full',
             discountAmount: '',
-            finalAmount: balance
+            finalAmount: balance,
+            mode: 'Cash'
         });
         setShowPaymentModal(true);
     };
@@ -116,7 +117,8 @@ const Jobs = () => {
             ...paymentJob,
             status: 'delivered',
             totalAmount: newTotal,
-            advanceAmount: newAdvance
+            advanceAmount: newAdvance,
+            note: `Payment collected via ${paymentData.mode || 'Cash'}`
         });
 
         setShowPaymentModal(false);
@@ -863,6 +865,36 @@ const Jobs = () => {
                                 Paid with Discount
                             </button>
                         </div>
+
+                        <div className="mt-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Payment Mode</label>
+                            <div className="flex flex-wrap gap-2">
+                                {['Cash', 'UPI', 'Card', 'Other'].map((mode) => (
+                                    <label key={mode} className={`cursor-pointer border rounded-lg px-4 py-3 text-sm flex items-center gap-3 transition-all ${(paymentData.mode || 'Cash') === mode
+                                        ? 'bg-blue-50 border-blue-500 text-blue-700 shadow-sm'
+                                        : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'
+                                        }`}>
+                                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${(paymentData.mode || 'Cash') === mode
+                                            ? 'border-blue-500 bg-blue-500'
+                                            : 'border-gray-300 bg-white'
+                                            }`}>
+                                            {(paymentData.mode || 'Cash') === mode && (
+                                                <div className="w-2 h-2 rounded-full bg-white" />
+                                            )}
+                                        </div>
+                                        <input
+                                            type="radio"
+                                            name="paymentMode"
+                                            value={mode}
+                                            checked={(paymentData.mode || 'Cash') === mode}
+                                            onChange={(e) => setPaymentData({ ...paymentData, mode: e.target.value })}
+                                            className="hidden"
+                                        />
+                                        <span className="font-medium select-none">{mode}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
                     </div>
 
                     {paymentData.type === 'discount' && (
@@ -877,9 +909,24 @@ const Jobs = () => {
                                         className="input-field !pl-8"
                                         placeholder="0.00"
                                         value={paymentData.discountAmount}
-                                        onChange={(e) => setPaymentData({ ...paymentData, discountAmount: e.target.value })}
+                                        min={0}
+                                        max={(parseFloat(paymentJob?.totalAmount || 0) - parseFloat(paymentJob?.advanceAmount || 0)) * 0.5}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            const pendingAmount = (parseFloat(paymentJob?.totalAmount || 0) - parseFloat(paymentJob?.advanceAmount || 0));
+                                            const maxDiscount = pendingAmount * 0.5;
+
+                                            if (parseFloat(val) > maxDiscount) {
+                                                setPaymentData({ ...paymentData, discountAmount: maxDiscount });
+                                            } else {
+                                                setPaymentData({ ...paymentData, discountAmount: val });
+                                            }
+                                        }}
                                     />
                                 </div>
+                                 <p className="text-xs text-gray-500 mt-1">
+                                        Max discount allowed: ₹{((parseFloat(paymentJob?.totalAmount || 0) - parseFloat(paymentJob?.advanceAmount || 0)) * 0.5).toLocaleString()} (50% of Balance)
+                                    </p>
                             </div>
                             <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 text-sm">
                                 <div className="flex justify-between mb-1">
@@ -938,6 +985,10 @@ const Jobs = () => {
                                         <div className="flex justify-between"><span className="text-gray-500">Phone:</span> <span className="font-medium text-gray-800">{viewJob.phone}</span></div>
                                         <div className="flex justify-between"><span className="text-gray-500">Device:</span> <span className="font-medium text-gray-800">{viewJob.device}</span></div>
                                         <div className="flex justify-between"><span className="text-gray-500">Technician:</span> <span className="font-medium text-gray-800">{viewJob.technician || 'Unassigned'}</span></div>
+                                        <div className="flex justify-between border-t border-gray-100 pt-2 mt-2">
+                                            <span className="text-gray-500">Issue:</span>
+                                            <span className="font-medium text-gray-800 text-right max-w-[60%] break-words">{viewJob.issue}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
