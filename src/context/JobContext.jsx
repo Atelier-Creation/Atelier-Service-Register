@@ -46,7 +46,8 @@ export const JobProvider = ({ children }) => {
 
     const addJob = async (jobData) => {
         try {
-            const { data } = await api.post('/jobs', jobData);
+            const config = jobData instanceof FormData ? { headers: { 'Content-Type': undefined } } : {};
+            const { data } = await api.post('/jobs', jobData, config);
             setJobs(prev => [data, ...prev]);
 
             // Optimistically update or re-fetch customers? 
@@ -67,7 +68,8 @@ export const JobProvider = ({ children }) => {
             // Optimistic update
             // setJobs(prev => prev.map(job => job.jobId === jobId ? { ...job, ...updates } : job)); // Be careful with IDs
 
-            const { data } = await api.put(`/jobs/${jobId}`, updates);
+            const config = updates instanceof FormData ? { headers: { 'Content-Type': undefined } } : {};
+            const { data } = await api.put(`/jobs/${jobId}`, updates, config);
             setJobs(prev => prev.map(job => job.jobId === jobId || job._id === jobId || job.id === jobId ? data : job));
         } catch (error) {
             console.error("Error updating job:", error);

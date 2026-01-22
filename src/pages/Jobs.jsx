@@ -7,7 +7,7 @@ import { Skeleton } from '../components/ui/Skeleton';
 import CreatableSelect from '../components/ui/CreatableSelect';
 import Select from '../components/ui/Select';
 import api from '../api/client';
-import { FiPlus, FiEdit2, FiTrash2, FiX, FiSave, FiFilter, FiSearch, FiExternalLink, FiCheckSquare, FiEye } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiX, FiSave, FiFilter, FiSearch, FiExternalLink, FiCheckSquare, FiEye, FiRotateCcw, FiHome, FiMapPin, FiCalendar } from 'react-icons/fi';
 import { BiRupee } from 'react-icons/bi';
 
 const DEVICE_CATEGORIES = {
@@ -81,8 +81,10 @@ const Jobs = () => {
     const [paymentData, setPaymentData] = useState({
         type: 'full', // 'full' or 'discount'
         discountAmount: '',
-        finalAmount: ''
+        finalAmount: '',
+        warranty: ''
     });
+    const [paymentFiles, setPaymentFiles] = useState([]);
 
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deletingJobId, setDeletingJobId] = useState(null);
@@ -94,8 +96,10 @@ const Jobs = () => {
             type: 'full',
             discountAmount: '',
             finalAmount: balance,
-            mode: 'Cash'
+            mode: 'Cash',
+            warranty: job.warranty || ''
         });
+        setPaymentFiles([]); // Reset files
         setShowPaymentModal(true);
     };
 
@@ -113,16 +117,116 @@ const Jobs = () => {
             newAdvance = newTotal; // Fully paid after discount
         }
 
-        updateJob(paymentJob.jobId || paymentJob.id, {
+        const updateData = {
             ...paymentJob,
             status: 'delivered',
             totalAmount: newTotal,
             advanceAmount: newAdvance,
+            warranty: paymentData.warranty,
             note: `Payment collected via ${paymentData.mode || 'Cash'}`
-        });
+        };
+
+        if (paymentFiles.length > 0) {
+            const fd = new FormData();
+            Object.keys(updateData).forEach(key => {
+                if (key !== 'images' && key !== 'statusHistory' && key !== 'createdAt' && key !== 'updatedAt') {
+                    // statusHistory & meta fields are handled by backend or shouldn't be overridden manually like this usually
+                    // But our updateJob sends full object. Let's send key data.
+                    // Actually, let's just send what we need.
+                    fd.append(key, updateData[key]);
+                }
+            });
+            // Ensure status and important fields are definitely added if filtered above
+            fd.append('status', 'delivered');
+            fd.append('totalAmount', newTotal);
+            fd.append('advanceAmount', newAdvance);
+            fd.append('note', updateData.note);
+            fd.append('warranty', paymentData.warranty);
+
+            paymentFiles.forEach(file => fd.append('afterImages', file));
+
+            updateJob(paymentJob.jobId || paymentJob.id, fd);
+        } else {
+            updateJob(paymentJob.jobId || paymentJob.id, updateData);
+        }
 
         setShowPaymentModal(false);
         setPaymentJob(null);
+        setPaymentFiles([]);
+    };
+
+    // Return / Reject State
+    const [showReturnModal, setShowReturnModal] = useState(false);
+    const [returnJob, setReturnJob] = useState(null);
+    const [returnData, setReturnData] = useState({
+        type: 'without-repair', // 'without-repair' or 'service-charge'
+        serviceCharge: '',
+        note: ''
+    });
+
+    const handleReturn = (job) => {
+        setReturnJob(job);
+        setReturnData({
+            type: 'without-repair',
+            serviceCharge: '',
+            note: ''
+        });
+        setPaymentFiles([]); // Reset files, recycle this state for images
+        setShowReturnModal(true);
+    };
+
+    const submitReturn = (e) => {
+        e.preventDefault();
+        if (!returnJob) return;
+
+        let newTotal = 0;
+        let newAdvance = parseFloat(returnJob.advanceAmount) || 0;
+        let note = returnData.note || 'Returned without repair';
+
+        if (returnData.type === 'service-charge') {
+            const charge = parseFloat(returnData.serviceCharge) || 0;
+            newTotal = charge;
+            // Balance logic: if advance > charge, maybe refund? Assuming simple model where total becomes the charge.
+            // If advance exists, it covers the charge. If not, they pay.
+            // Balance = Total - Advance.
+            note = `Returned with service charge: ₹${charge}. ${returnData.note}`;
+        } else {
+            // Return without repair. Total should effectively be 0 or equal to advance if we keep it?
+            // Usually implies cancelling the remaining amount.
+            // Let's set Total to Advance so Balance is 0.
+            newTotal = newAdvance;
+            note = `Returned without repair. ${returnData.note}`;
+        }
+
+        const updateData = {
+            ...returnJob,
+            status: 'returned', // Item is leaving shop
+            totalAmount: newTotal,
+            // advanceAmount stays same
+            note: note
+        };
+
+        if (paymentFiles.length > 0) {
+            const fd = new FormData();
+            Object.keys(updateData).forEach(key => {
+                if (key !== 'images' && key !== 'statusHistory' && key !== 'createdAt' && key !== 'updatedAt') {
+                    fd.append(key, updateData[key]);
+                }
+            });
+            fd.append('status', 'returned');
+            fd.append('totalAmount', newTotal);
+            fd.append('note', note);
+
+            paymentFiles.forEach(file => fd.append('afterImages', file));
+
+            updateJob(returnJob.jobId || returnJob.id, fd);
+        } else {
+            updateJob(returnJob.jobId || returnJob.id, updateData);
+        }
+
+        setShowReturnModal(false);
+        setReturnJob(null);
+        setPaymentFiles([]);
     };
 
     // Receive Back State
@@ -161,12 +265,15 @@ const Jobs = () => {
         receivedDate: new Date().toISOString().split('T')[0],
         estimatedDelivery: '',
         technician: '',
-        advanceAmount: '',
         totalAmount: '',
         status: 'received',
-        totalAmount: '',
-        status: 'received',
+        warranty: '',
+        type: 'walk-in',
+        address: '',
+        visitDate: ''
     });
+    const [beforeFiles, setBeforeFiles] = useState([]);
+    const [afterFiles, setAfterFiles] = useState([]);
 
     const handleOutsource = (job) => {
         setOutsourcingJob(job);
@@ -245,12 +352,25 @@ const Jobs = () => {
         const fullDeviceName = `${formData.brand} ${formData.model} (${formData.deviceType})`.trim();
         const submissionData = { ...formData, device: fullDeviceName };
 
+        let dataToSend = submissionData;
+        const hasFiles = beforeFiles.length > 0 || afterFiles.length > 0;
+
+        if (hasFiles) {
+            const fd = new FormData();
+            Object.keys(submissionData).forEach(key => {
+                fd.append(key, submissionData[key]);
+            });
+            beforeFiles.forEach(file => fd.append('beforeImages', file));
+            afterFiles.forEach(file => fd.append('afterImages', file));
+            dataToSend = fd;
+        }
+
         if (editingJob) {
             const idToUpdate = editingJob.jobId || editingJob.id;
-            updateJob(idToUpdate, submissionData);
+            updateJob(idToUpdate, dataToSend);
             setEditingJob(null);
         } else {
-            addJob(submissionData);
+            addJob(dataToSend);
         }
         resetForm();
         setShowForm(false);
@@ -272,6 +392,10 @@ const Jobs = () => {
             advanceAmount: job.advanceAmount,
             totalAmount: job.totalAmount,
             status: job.status,
+            warranty: job.warranty || '',
+            type: job.type || 'walk-in',
+            address: job.address || '',
+            visitDate: job.visitDate ? new Date(job.visitDate).toISOString().slice(0, 16) : ''
         });
         setShowForm(true);
     };
@@ -305,6 +429,8 @@ const Jobs = () => {
             totalAmount: '',
             status: 'received',
         });
+        setBeforeFiles([]);
+        setAfterFiles([]);
     };
 
     const handleChange = (e) => {
@@ -317,13 +443,14 @@ const Jobs = () => {
             'in-progress': 'status-in-progress',
             waiting: 'status-waiting',
             ready: 'status-ready',
-            waiting: 'status-waiting',
-            ready: 'status-ready',
             delivered: 'status-delivered',
             outsourced: 'bg-purple-50 text-purple-600 border-purple-100', // Custom style for outsourced
+            returned: 'bg-orange-50 text-orange-600 border-orange-100',
         };
         return classes[status] || 'status-received';
     };
+
+    const isHomeService = (job) => job.type === 'home-service'; // Helper
 
     const filteredJobs = jobs.filter(job => {
         const matchesStatus = filterStatus === 'all' || job.status === filterStatus;
@@ -367,7 +494,7 @@ const Jobs = () => {
             {/* Filters & Controls */}
             <div className="card p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto">
-                    {['all', 'received', 'in-progress', 'waiting', 'ready', 'delivered', 'outsourced'].map((status) => (
+                    {['all', 'received', 'in-progress', 'waiting', 'ready', 'delivered', 'returned', 'outsourced'].map((status) => (
                         <button
                             key={status}
                             onClick={() => setFilterStatus(status)}
@@ -417,7 +544,10 @@ const Jobs = () => {
                                     </td>
                                     <td className="py-4 px-6">
                                         <div>
-                                            <p className="font-medium text-gray-800 capitalize">{job.customerName}</p>
+                                            <p className="font-medium text-gray-800 capitalize flex items-center gap-1">
+                                                {job.customerName}
+                                                {isHomeService(job) && <FiHome className="text-blue-500 w-3 h-3" title="Home Service" />}
+                                            </p>
                                             <p className="text-gray-500 text-xs">{job.phone}</p>
                                         </div>
                                     </td>
@@ -454,7 +584,14 @@ const Jobs = () => {
 
                                     </td>
                                     <td className="py-4 px-6 text-gray-500 text-sm">
-                                        {new Date(job.estimatedDelivery).toLocaleDateString()}
+                                        {isHomeService(job) ? (
+                                            <div className="flex flex-col">
+                                                <span className="font-medium text-blue-600">Visit:</span>
+                                                <span className="text-xs">{job.visitDate ? new Date(job.visitDate).toLocaleString() : 'Not scheduled'}</span>
+                                            </div>
+                                        ) : (
+                                            new Date(job.estimatedDelivery).toLocaleDateString()
+                                        )}
                                     </td>
                                     <td className="py-4 px-6">
                                         {((parseFloat(job.totalAmount) || 0) - (parseFloat(job.advanceAmount) || 0)) <= 0 ? (
@@ -478,7 +615,7 @@ const Jobs = () => {
                                                     <FiEye className="w-4 h-4" />
                                                 </button>
                                             )}
-                                            {['admin', 'technician'].includes(user?.role) && (
+                                            {['admin', 'technician'].includes(user?.role) && job.status !== 'delivered' && job.status !== 'returned' && (
                                                 <button
                                                     onClick={() => handleEdit(job)}
                                                     className="p-2 bg-white text-gray-400 hover:text-[#4361ee] hover:shadow-md rounded-lg shadow-sm border border-gray-100 transition-all"
@@ -487,7 +624,7 @@ const Jobs = () => {
                                                     <FiEdit2 className="w-4 h-4" />
                                                 </button>
                                             )}
-                                            {['admin', 'technician'].includes(user?.role) && job.status !== 'delivered' && (
+                                            {['admin', 'technician'].includes(user?.role) && job.status !== 'delivered' && job.status !== 'returned' && (
                                                 job.status === 'outsourced' ? (
                                                     <button
                                                         onClick={() => handleReceiveBack(job)}
@@ -507,14 +644,23 @@ const Jobs = () => {
                                                 )
                                             )}
                                             {/* Get Payment Action */}
-                                            {['admin', 'technician'].includes(user?.role) && job.status !== 'delivered' && job.status !== 'outsourced' && (
-                                                <button
-                                                    onClick={() => handlePayment(job)}
-                                                    className="p-2 bg-white text-gray-400 hover:text-emerald-600 hover:shadow-md rounded-lg shadow-sm border border-gray-100 transition-all"
-                                                    title="Get Payment / Deliver"
-                                                >
-                                                    <BiRupee className="w-4 h-4" />
-                                                </button>
+                                            {['admin', 'technician'].includes(user?.role) && job.status !== 'delivered' && job.status !== 'returned' && job.status !== 'outsourced' && (
+                                                <>
+                                                    <button
+                                                        onClick={() => handleReturn(job)}
+                                                        className="p-2 bg-white text-gray-400 hover:text-orange-500 hover:shadow-md rounded-lg shadow-sm border border-gray-100 transition-all"
+                                                        title="Return / Reject Order"
+                                                    >
+                                                        <FiRotateCcw className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handlePayment(job)}
+                                                        className="p-2 bg-white text-gray-400 hover:text-emerald-600 hover:shadow-md rounded-lg shadow-sm border border-gray-100 transition-all"
+                                                        title="Get Payment / Deliver"
+                                                    >
+                                                        <BiRupee className="w-4 h-4" />
+                                                    </button>
+                                                </>
                                             )}
                                             {user?.role === 'admin' && (
                                                 <button
@@ -544,7 +690,6 @@ const Jobs = () => {
                                     <Skeleton className="h-4 w-24" />
                                     <Skeleton className="h-6 w-20 rounded-full" />
                                     <Skeleton className="h-4 w-24" />
-                                    <Skeleton className="h-4 w-16" />
                                     <Skeleton className="h-8 w-8 rounded-lg" />
                                 </div>
                             ))}
@@ -566,21 +711,57 @@ const Jobs = () => {
             <Modal
                 isOpen={showForm}
                 onClose={() => setShowForm(false)}
-                title={editingJob ? 'Edit Order Details' : 'Create New Order'}
+                title={editingJob ? 'Edit Order' : 'New Order'}
             >
+                {/* <h3 className="text-xl font-bold text-gray-800 mb-6"></h3> */}
+
+                {/* Service Type Toggle */}
+                <div className="flex gap-4 mb-6 p-1 bg-gray-100 rounded-lg w-fit">
+                    <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, type: 'walk-in' })}
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${formData.type === 'walk-in' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                        Walk-in
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, type: 'home-service' })}
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${formData.type === 'home-service' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                        <FiHome className="w-4 h-4" /> Home Service
+                    </button>
+                </div>
+
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Form sections similar to previous but with updated classes */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
                         <div className="space-y-4">
                             <h4 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">Customer Info</h4>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
-                                <input type="text" name="customerName" value={formData.customerName} onChange={handleChange} className="input-field" required />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
+                                    <input type="text" name="customerName" value={formData.customerName} onChange={handleChange} className="input-field" required />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                                    <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="input-field" required />
+                                </div>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                                <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="input-field" required />
-                            </div>
+
+                            {formData.type === 'home-service' && (
+                                <div className="animate-fade-in">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Service Address <span className="text-red-500">*</span></label>
+                                    <textarea
+                                        name="address"
+                                        value={formData.address}
+                                        onChange={handleChange}
+                                        className="input-field min-h-[80px]"
+                                        placeholder="Full address for technician visit..."
+                                        required
+                                    ></textarea>
+                                </div>
+                            )}
                         </div>
 
                         <div className="space-y-4">
@@ -628,6 +809,17 @@ const Jobs = () => {
                                     />
                                 </div>
                             </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Warranty (Optional)</label>
+                                <input
+                                    type="text"
+                                    name="warranty"
+                                    value={formData.warranty}
+                                    onChange={handleChange}
+                                    className="input-field"
+                                    placeholder="e.g. 3 Months, No Warranty"
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -638,20 +830,62 @@ const Jobs = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Received Date</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Before Condition Images</label>
+                            <input
+                                type="file"
+                                multiple
+                                accept="image/*"
+                                onChange={(e) => setBeforeFiles(Array.from(e.target.files))}
+                                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">{beforeFiles.length} files selected</p>
+                            {beforeFiles.length > 0 && (
+                                <div className="mt-2 grid grid-cols-4 gap-2">
+                                    {beforeFiles.map((file, index) => (
+                                        <div key={index} className="relative aspect-square group">
+                                            <img
+                                                src={URL.createObjectURL(file)}
+                                                alt={`preview ${index}`}
+                                                className="w-full h-full object-cover rounded-lg border border-gray-200"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setBeforeFiles(prev => prev.filter((_, i) => i !== index))}
+                                                className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 shadow-sm hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                                            >
+                                                <FiX className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Received / Booking Date</label>
                             <input type="date" name="receivedDate" value={formData.receivedDate} onChange={handleChange} className="input-field" required />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Delivery</label>
-                            <input
-                                type="date"
-                                name="estimatedDelivery"
-                                value={formData.estimatedDelivery}
-                                onChange={handleChange}
-                                className="input-field"
-                                required
-                                min={new Date().toISOString().split('T')[0]}
-                            />
+                            {formData.type === 'home-service' ? (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1"><FiCalendar /> Scheduled Visit Date/Time <span className="text-red-500">*</span></label>
+                                    <input
+                                        type="datetime-local"
+                                        name="visitDate"
+                                        value={formData.visitDate}
+                                        onChange={handleChange}
+                                        className="input-field bg-blue-50 border-blue-200 focus:border-blue-500"
+                                        required
+                                    />
+                                </div>
+                            ) : (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Delivery</label>
+                                    <input type="date" name="estimatedDelivery" value={formData.estimatedDelivery} onChange={handleChange} className="input-field" />
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -691,7 +925,8 @@ const Jobs = () => {
                                 { value: 'in-progress', label: 'In Progress' },
                                 { value: 'waiting', label: 'Waiting for Parts' },
                                 { value: 'ready', label: 'Ready for Delivery' },
-                                { value: 'delivered', label: 'Delivered' }
+                                { value: 'delivered', label: 'Delivered' },
+                                { value: 'returned', label: 'Returned' }
                             ]}
                         />
                     </div>
@@ -924,9 +1159,9 @@ const Jobs = () => {
                                         }}
                                     />
                                 </div>
-                                 <p className="text-xs text-gray-500 mt-1">
-                                        Max discount allowed: ₹{((parseFloat(paymentJob?.totalAmount || 0) - parseFloat(paymentJob?.advanceAmount || 0)) * 0.5).toLocaleString()} (50% of Balance)
-                                    </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Max discount allowed: ₹{((parseFloat(paymentJob?.totalAmount || 0) - parseFloat(paymentJob?.advanceAmount || 0)) * 0.5).toLocaleString()} (50% of Balance)
+                                </p>
                             </div>
                             <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 text-sm">
                                 <div className="flex justify-between mb-1">
@@ -941,6 +1176,49 @@ const Jobs = () => {
                         </div>
                     )}
 
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Warranty Details</label>
+                        <input
+                            type="text"
+                            value={paymentData.warranty}
+                            onChange={(e) => setPaymentData({ ...paymentData, warranty: e.target.value })}
+                            className="input-field"
+                            placeholder="e.g. 1 Month Testing Warranty"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">After Repair Images (Proof of Delivery condition)</label>
+                        <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={(e) => setPaymentFiles(Array.from(e.target.files))}
+                            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">{paymentFiles.length} files selected</p>
+                        {paymentFiles.length > 0 && (
+                            <div className="mt-2 grid grid-cols-4 gap-2">
+                                {paymentFiles.map((file, index) => (
+                                    <div key={index} className="relative aspect-square group">
+                                        <img
+                                            src={URL.createObjectURL(file)}
+                                            alt={`preview ${index}`}
+                                            className="w-full h-full object-cover rounded-lg border border-gray-200"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setPaymentFiles(prev => prev.filter((_, i) => i !== index))}
+                                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 shadow-sm hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                                        >
+                                            <FiX className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
                     <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
                         <button type="button" onClick={() => setShowPaymentModal(false)} className="btn-secondary">Cancel</button>
                         <button type="submit" className="btn-primary flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200">
@@ -950,6 +1228,120 @@ const Jobs = () => {
                                     ? `Confirm & Deliver`
                                     : `Apply Discount & Deliver`}
                             </span>
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* Return / Reject Modal */}
+            <Modal
+                isOpen={showReturnModal}
+                onClose={() => setShowReturnModal(false)}
+                title="Return / Reject Order"
+            >
+                <form onSubmit={submitReturn} className="space-y-6">
+                    <div className="bg-orange-50 border border-orange-100 rounded-lg p-4 text-sm text-orange-800 mb-4">
+                        You are marking this order as <b>Returned</b>. The status will be updated to <b>Returned</b> (Closed).
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Return Type</label>
+                        <div className="flex flex-col gap-3">
+                            <label className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${returnData.type === 'without-repair' ? 'border-orange-500 bg-orange-50 ring-1 ring-orange-500' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                <input
+                                    type="radio"
+                                    name="returnType"
+                                    value="without-repair"
+                                    checked={returnData.type === 'without-repair'}
+                                    onChange={() => setReturnData({ ...returnData, type: 'without-repair' })}
+                                    className="mr-3 text-orange-600 focus:ring-orange-500"
+                                />
+                                <div>
+                                    <span className="block text-sm font-medium text-gray-900">Return Without Repair</span>
+                                    <span className="block text-xs text-gray-500">No charges applied. Balance will be cleared.</span>
+                                </div>
+                            </label>
+
+                            <label className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${returnData.type === 'service-charge' ? 'border-orange-500 bg-orange-50 ring-1 ring-orange-500' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                <input
+                                    type="radio"
+                                    name="returnType"
+                                    value="service-charge"
+                                    checked={returnData.type === 'service-charge'}
+                                    onChange={() => setReturnData({ ...returnData, type: 'service-charge' })}
+                                    className="mr-3 text-orange-600 focus:ring-orange-500"
+                                />
+                                <div>
+                                    <span className="block text-sm font-medium text-gray-900">Return with Service Charge</span>
+                                    <span className="block text-xs text-gray-500">Apply a small inspection or service fee.</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    {returnData.type === 'service-charge' && (
+                        <div className="animate-fade-in">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Service Charge Amount</label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">₹</span>
+                                <input
+                                    type="number"
+                                    required
+                                    className="input-field !pl-8"
+                                    placeholder="0.00"
+                                    value={returnData.serviceCharge}
+                                    onChange={(e) => setReturnData({ ...returnData, serviceCharge: e.target.value })}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Note / Reason</label>
+                        <textarea
+                            className="input-field"
+                            placeholder="e.g. Parts not available, Customer refused estimate..."
+                            value={returnData.note}
+                            onChange={(e) => setReturnData({ ...returnData, note: e.target.value })}
+                        ></textarea>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Device Images (Optional)</label>
+                        <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={(e) => setPaymentFiles(Array.from(e.target.files))}
+                            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">{paymentFiles.length} files selected</p>
+                        {paymentFiles.length > 0 && (
+                            <div className="mt-2 grid grid-cols-4 gap-2">
+                                {paymentFiles.map((file, index) => (
+                                    <div key={index} className="relative aspect-square group">
+                                        <img
+                                            src={URL.createObjectURL(file)}
+                                            alt={`preview ${index}`}
+                                            className="w-full h-full object-cover rounded-lg border border-gray-200"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setPaymentFiles(prev => prev.filter((_, i) => i !== index))}
+                                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 shadow-sm hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                                        >
+                                            <FiX className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                        <button type="button" onClick={() => setShowReturnModal(false)} className="btn-secondary">Cancel</button>
+                        <button type="submit" className="btn-primary bg-orange-600 hover:bg-orange-700 shadow-orange-200">
+                            Confirm Return
                         </button>
                     </div>
                 </form>
@@ -975,6 +1367,17 @@ const Jobs = () => {
                             </span>
                         </div>
 
+                        {isHomeService(viewJob) && (
+                            <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 flex items-start gap-3 text-sm text-blue-800">
+                                <FiHome className="mt-0.5 shrink-0" />
+                                <div>
+                                    <p className="font-bold">Home Service Order</p>
+                                    <p><span className="opacity-70">Address:</span> {viewJob.address}</p>
+                                    <p><span className="opacity-70">Scheduled Visit:</span> {viewJob.visitDate ? new Date(viewJob.visitDate).toLocaleString() : 'Not Scheduled'}</p>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Customer & Device */}
                             <div className="space-y-4">
@@ -985,6 +1388,7 @@ const Jobs = () => {
                                         <div className="flex justify-between"><span className="text-gray-500">Phone:</span> <span className="font-medium text-gray-800">{viewJob.phone}</span></div>
                                         <div className="flex justify-between"><span className="text-gray-500">Device:</span> <span className="font-medium text-gray-800">{viewJob.device}</span></div>
                                         <div className="flex justify-between"><span className="text-gray-500">Technician:</span> <span className="font-medium text-gray-800">{viewJob.technician || 'Unassigned'}</span></div>
+                                        <div className="flex justify-between"><span className="text-gray-500">Warranty:</span> <span className="font-medium text-gray-800">{viewJob.warranty || 'No Warranty'}</span></div>
                                         <div className="flex justify-between border-t border-gray-100 pt-2 mt-2">
                                             <span className="text-gray-500">Issue:</span>
                                             <span className="font-medium text-gray-800 text-right max-w-[60%] break-words">{viewJob.issue}</span>
@@ -1021,6 +1425,47 @@ const Jobs = () => {
                                     <div><span className="opacity-70">Vendor Cost:</span> <span className="font-medium">₹{parseFloat(viewJob.outsourced.cost || 0).toLocaleString()}</span></div>
                                     <div><span className="opacity-70">Date:</span> <span className="font-medium">{viewJob.outsourced.date ? new Date(viewJob.outsourced.date).toLocaleDateString() : 'N/A'}</span></div>
                                 </div>
+                            </div>
+                        )}
+
+                        {/* Images Section */}
+                        {viewJob.images && (
+                            <div className="space-y-4">
+                                {(viewJob.images.before?.length > 0 || viewJob.images.after?.length > 0) && (
+                                    <h4 className="font-semibold text-gray-800 mb-2">Device Images</h4>
+                                )}
+                                {viewJob.images.before?.length > 0 && (
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-500 mb-2">Before Repair</p>
+                                        <div className="flex gap-2 overflow-x-auto pb-2">
+                                            {viewJob.images.before.map((img, i) => {
+                                                const baseUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
+                                                const imgUrl = `${baseUrl}${img}`;
+                                                return (
+                                                    <a key={i} href={imgUrl} target="_blank" rel="noopener noreferrer">
+                                                        <img src={imgUrl} alt="Before" className="h-24 w-24 object-cover rounded-lg border border-gray-200" />
+                                                    </a>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+                                {viewJob.images.after?.length > 0 && (
+                                    <div className="mt-4">
+                                        <p className="text-sm font-medium text-gray-500 mb-2">After Repair</p>
+                                        <div className="flex gap-2 overflow-x-auto pb-2">
+                                            {viewJob.images.after.map((img, i) => {
+                                                const baseUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
+                                                const imgUrl = `${baseUrl}${img}`;
+                                                return (
+                                                    <a key={i} href={imgUrl} target="_blank" rel="noopener noreferrer">
+                                                        <img src={imgUrl} alt="After" className="h-24 w-24 object-cover rounded-lg border border-gray-200" />
+                                                    </a>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -1083,7 +1528,7 @@ const Jobs = () => {
                     </div>
                 </div>
             </Modal>
-        </div>
+        </div >
     );
 };
 
