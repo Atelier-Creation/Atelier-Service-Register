@@ -214,7 +214,7 @@ const Settings = () => {
         }
     };
 
-    const staffCount = users.filter(u => u.role !== 'admin').length;
+    const staffCount = users?.filter(u => u.role !== 'admin').length;
     const canAddUser = staffCount < 1;
 
     const sections = [

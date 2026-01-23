@@ -21,7 +21,7 @@ const CreatableSelect = ({ label, options = [], value, onChange, placeholder, cl
 
             // If user is typing something not in list, we still show the list filtered
             // but we also treat the input as the value.
-            const filtered = options.filter(opt =>
+            const filtered = options?.filter(opt =>
                 opt.toLowerCase().includes(lowerInput)
             );
             setFilteredOptions(filtered);

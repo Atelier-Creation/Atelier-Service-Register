@@ -194,7 +194,7 @@ const Jobs = () => {
 
         let breakdownNote = '';
         if (paymentData.breakdownItems && paymentData.breakdownItems.length > 0) {
-            const validItems = paymentData.breakdownItems.filter(i => i.description.trim() || i.amount);
+            const validItems = paymentData.breakdownItems?.filter(i => i.description.trim() || i.amount);
             if (validItems.length > 0) {
                 const itemsStr = validItems.map(i => `${i.description || 'Item'}: ₹${i.amount || 0}`).join(', ');
                 const total = validItems.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
@@ -506,7 +506,7 @@ const Jobs = () => {
     const confirmDelete = async () => {
         if (deletingJobId) {
             await deleteJob(deletingJobId);
-            setJobs(prev => prev.filter(j => (j.jobId || j.id) !== deletingJobId));
+            setJobs(prev => prev?.filter(j => (j.jobId || j.id) !== deletingJobId));
             setShowDeleteModal(false);
             setDeletingJobId(null);
         }
@@ -933,7 +933,7 @@ const Jobs = () => {
                                             />
                                             <button
                                                 type="button"
-                                                onClick={() => setBeforeFiles(prev => prev.filter((_, i) => i !== index))}
+                                                onClick={() => setBeforeFiles(prev => prev?.filter((_, i) => i !== index))}
                                                 className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 shadow-sm hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
                                             >
                                                 <FiX className="w-3 h-3" />
@@ -1261,7 +1261,7 @@ const Jobs = () => {
                                     <button
                                         type="button"
                                         onClick={() => {
-                                            const newItems = paymentData.breakdownItems.filter((_, i) => i !== index);
+                                            const newItems = paymentData.breakdownItems?.filter((_, i) => i !== index);
                                             setPaymentData({ ...paymentData, breakdownItems: newItems });
                                         }}
                                         className="text-gray-400 hover:text-red-500 p-1"
@@ -1357,7 +1357,7 @@ const Jobs = () => {
                                         />
                                         <button
                                             type="button"
-                                            onClick={() => setPaymentFiles(prev => prev.filter((_, i) => i !== index))}
+                                            onClick={() => setPaymentFiles(prev => prev?.filter((_, i) => i !== index))}
                                             className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 shadow-sm hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
                                         >
                                             <FiX className="w-3 h-3" />
@@ -1476,7 +1476,7 @@ const Jobs = () => {
                                         />
                                         <button
                                             type="button"
-                                            onClick={() => setPaymentFiles(prev => prev.filter((_, i) => i !== index))}
+                                            onClick={() => setPaymentFiles(prev => prev?.filter((_, i) => i !== index))}
                                             className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 shadow-sm hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
                                         >
                                             <FiX className="w-3 h-3" />

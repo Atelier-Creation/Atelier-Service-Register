@@ -64,7 +64,7 @@ const Dashboard = () => {
                     // Actually, I'll just show "Recent Orders" for now to fix the crash.
                     // I'll try to Filter 'todayRes' client side but it only gets top 100. Better than nothing.
 
-                    const todayJobs = todayRes.data.jobs.filter(j => {
+                    const todayJobs = todayRes.data.jobs?.filter(j => {
                         if (!j.estimatedDelivery) return false;
                         return new Date(j.estimatedDelivery).toISOString().split('T')[0] === today;
                     });
@@ -194,7 +194,7 @@ const Dashboard = () => {
                 ) : (
                     <>
                         {statCards
-                            .filter(stat => user?.role === 'admin' || !['Total Revenue'].includes(stat.title))
+                            ?.filter(stat => user?.role === 'admin' || !['Total Revenue'].includes(stat.title))
                             .map((stat, index) => (
                                 <StatCard
                                     key={index}

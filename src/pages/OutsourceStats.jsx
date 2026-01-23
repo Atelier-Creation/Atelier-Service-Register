@@ -38,7 +38,7 @@ const OutsourceStats = () => {
 
     // Filter jobs for the selected month
     const monthlyOutsourcedJobs = useMemo(() => {
-        return jobs.filter(job => {
+        return jobs?.filter(job => {
             if (!job.outsourced || !job.outsourced.name) return false;
             // Use 'outsourced.date' or 'createdAt' if not present? 
             // The original logic used 'outsourced.date'.
@@ -94,7 +94,7 @@ const OutsourceStats = () => {
         let data = [...technicianStats];
         if (viewActiveOnly) {
             data.sort((a, b) => b.activeJobs - a.activeJobs);
-            data = data.filter(t => t.activeJobs > 0);
+            data = data?.filter(t => t.activeJobs > 0);
         }
         return data;
     }, [technicianStats, viewActiveOnly]);
