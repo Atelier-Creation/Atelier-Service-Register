@@ -1,30 +1,60 @@
 import { useState, useEffect } from 'react';
-import { useJobs } from '../context/JobContext';
+// import { useJobs } from '../context/JobContext'; // Not used anymore if we remove it, or keep for consistency? Actually I removed it in previous step logic.
+// But better to remove the unused import or keep it if I plan to use something else.
 import { useSearchParams, Link } from 'react-router-dom';
+import api from '../api/client';
 import { FiSearch, FiPhone, FiUser, FiFileText, FiClock } from 'react-icons/fi';
+import { Skeleton } from '../components/ui/Skeleton';
 
 const Search = () => {
-    const { searchJobs } = useJobs();
+    // const { searchJobs } = useJobs(); // Removed context dependency
     const [searchParams, setSearchParams] = useSearchParams();
     const queryParam = searchParams.get('q') || '';
 
     const [searchQuery, setSearchQuery] = useState(queryParam);
     const [searchResults, setSearchResults] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [searchType, setSearchType] = useState('all');
 
     useEffect(() => {
-        if (queryParam) {
-            setSearchQuery(queryParam);
-            const results = searchJobs(queryParam);
-            setSearchResults(results);
-        }
-    }, [queryParam, searchJobs]);
+        const performSearch = async () => {
+            if (!queryParam) {
+                setSearchResults([]);
+                return;
+            }
+
+            setLoading(true);
+            try {
+                // Determine filter if not 'all'
+                // Backend supports generic 'search' param which searches most fields.
+                // If we want specific field search (phone, customer), we might need to adjust backend 
+                // OR just send 'search' param and let backend handle it (smart search).
+                // Ideally, 'search' param in backend matches against name, phone, jobId, etc.
+                // So we just pass the query.
+
+                const { data } = await api.get('/jobs', {
+                    params: {
+                        search: queryParam,
+                        limit: 50 // reasonable limit for search results
+                    }
+                });
+                setSearchResults(data.jobs || []);
+            } catch (error) {
+                console.error("Search failed", error);
+                setSearchResults([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        setSearchQuery(queryParam);
+        performSearch();
+    }, [queryParam]);
 
     const handleSearch = (e) => {
         e.preventDefault();
         if (searchQuery.trim()) {
             setSearchParams({ q: searchQuery }); // Update URL
-            // The useEffect will trigger the search
         }
     };
 
@@ -96,7 +126,24 @@ const Search = () => {
             </div>
 
             {/* Results */}
-            {searchResults.length > 0 ? (
+            {loading ? (
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between px-2">
+                        <Skeleton className="h-4 w-24" />
+                    </div>
+                    {Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className="card p-6 flex gap-6">
+                            <div className="flex-1 space-y-3">
+                                <div className="flex justify-between">
+                                    <Skeleton className="h-6 w-48" />
+                                    <Skeleton className="h-6 w-20 rounded-full" />
+                                </div>
+                                <Skeleton className="h-4 w-32" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : searchResults.length > 0 ? (
                 <div className="space-y-4">
                     <div className="flex items-center justify-between px-2">
                         <h3 className="font-semibold text-gray-700">Found {searchResults.length} results</h3>

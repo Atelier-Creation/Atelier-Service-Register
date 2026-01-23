@@ -19,10 +19,81 @@ const DEVICE_CATEGORIES = {
 };
 
 const Jobs = () => {
-    const { jobs, addJob, updateJob, deleteJob, loading } = useJobs();
+    const { addJob, updateJob, deleteJob } = useJobs();
+    const [jobs, setJobs] = useState([]);
+    const [page, setPage] = useState(1);
+    const [loading, setLoading] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+    // Search & Filter State
+    const [filterStatus, setFilterStatus] = useState('all');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+
     const { user } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
+
+    // Debounce Search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    useEffect(() => {
+        // Reset list when filter or search changes
+        setPage(1);
+        setJobs([]);
+        setHasMore(true);
+        // We will trigger fetch in the next effect due to dependency on page/filter/search
+    }, [filterStatus, debouncedSearch]);
+
+    const fetchJobs = async () => {
+        if (!hasMore && page > 1) return;
+
+        setLoading(true);
+        try {
+            const params = {
+                page,
+                limit: 20,
+                search: debouncedSearch,
+                filter: filterStatus
+            };
+            const { data } = await api.get('/jobs', { params });
+
+            if (data.jobs.length === 0) {
+                if (page === 1) setJobs([]);
+                setHasMore(false);
+            } else {
+                setJobs(prev => page === 1 ? data.jobs : [...prev, ...data.jobs]);
+                if (data.jobs.length < 20) setHasMore(false);
+            }
+        } catch (error) {
+            console.error("Failed to fetch jobs", error);
+        } finally {
+            setLoading(false);
+            setIsInitialLoad(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchJobs();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [page, filterStatus, debouncedSearch]);
+
+    // Infinite Scroll
+    useEffect(() => {
+        const handleScroll = () => {
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 && hasMore && !loading) {
+                setPage(prev => prev + 1);
+            }
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [hasMore, loading]);
 
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
@@ -49,12 +120,13 @@ const Jobs = () => {
         // Handle 'View Job' action
         const viewJobId = searchParams.get('view');
         if (viewJobId) {
+            // We might not have the job loaded if it's old. Fetch it individually if not found.
             const jobToView = jobs.find(j => (j.jobId || j.id || j._id) === viewJobId);
             if (jobToView) {
                 setViewJob(jobToView);
                 setShowViewModal(true);
-                // Optional: Clean URL
-                // navigate('/jobs', { replace: true });
+            } else {
+                // Fetch specifically? Maybe later.
             }
         }
     }, [location, navigate, jobs]);
@@ -82,7 +154,8 @@ const Jobs = () => {
         type: 'full', // 'full' or 'discount'
         discountAmount: '',
         finalAmount: '',
-        warranty: ''
+        warranty: '',
+        breakdown: ''
     });
     const [paymentFiles, setPaymentFiles] = useState([]);
 
@@ -96,8 +169,10 @@ const Jobs = () => {
             type: 'full',
             discountAmount: '',
             finalAmount: balance,
+            finalAmount: balance,
             mode: 'Cash',
-            warranty: job.warranty || ''
+            warranty: job.warranty || '',
+            breakdownItems: [{ description: '', amount: '' }]
         });
         setPaymentFiles([]); // Reset files
         setShowPaymentModal(true);
@@ -117,26 +192,34 @@ const Jobs = () => {
             newAdvance = newTotal; // Fully paid after discount
         }
 
+        let breakdownNote = '';
+        if (paymentData.breakdownItems && paymentData.breakdownItems.length > 0) {
+            const validItems = paymentData.breakdownItems.filter(i => i.description.trim() || i.amount);
+            if (validItems.length > 0) {
+                const itemsStr = validItems.map(i => `${i.description || 'Item'}: ₹${i.amount || 0}`).join(', ');
+                const total = validItems.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+                breakdownNote = `. Breakdown: ${itemsStr} (Total: ₹${total})`;
+            }
+        }
+
         const updateData = {
             ...paymentJob,
             status: 'delivered',
             totalAmount: newTotal,
             advanceAmount: newAdvance,
             warranty: paymentData.warranty,
-            note: `Payment collected via ${paymentData.mode || 'Cash'}`
+            warranty: paymentData.warranty,
+            warranty: paymentData.warranty,
+            note: `Payment collected via ${paymentData.mode || 'Cash'}${breakdownNote}`
         };
 
         if (paymentFiles.length > 0) {
             const fd = new FormData();
             Object.keys(updateData).forEach(key => {
                 if (key !== 'images' && key !== 'statusHistory' && key !== 'createdAt' && key !== 'updatedAt') {
-                    // statusHistory & meta fields are handled by backend or shouldn't be overridden manually like this usually
-                    // But our updateJob sends full object. Let's send key data.
-                    // Actually, let's just send what we need.
                     fd.append(key, updateData[key]);
                 }
             });
-            // Ensure status and important fields are definitely added if filtered above
             fd.append('status', 'delivered');
             fd.append('totalAmount', newTotal);
             fd.append('advanceAmount', newAdvance);
@@ -145,9 +228,14 @@ const Jobs = () => {
 
             paymentFiles.forEach(file => fd.append('afterImages', file));
 
-            updateJob(paymentJob.jobId || paymentJob.id, fd);
+            updateJob(paymentJob.jobId || paymentJob.id, fd).then(res => {
+                // Update local list
+                setJobs(prev => prev.map(j => (j.jobId || j.id) === (res.jobId || res.id) ? res : j));
+            });
         } else {
-            updateJob(paymentJob.jobId || paymentJob.id, updateData);
+            updateJob(paymentJob.jobId || paymentJob.id, updateData).then(res => {
+                setJobs(prev => prev.map(j => (j.jobId || j.id) === (res.jobId || res.id) ? res : j));
+            });
         }
 
         setShowPaymentModal(false);
@@ -219,9 +307,13 @@ const Jobs = () => {
 
             paymentFiles.forEach(file => fd.append('afterImages', file));
 
-            updateJob(returnJob.jobId || returnJob.id, fd);
+            updateJob(returnJob.jobId || returnJob.id, fd).then(res => {
+                setJobs(prev => prev.map(j => (j.jobId || j.id) === (res.jobId || res.id) ? res : j));
+            });
         } else {
-            updateJob(returnJob.jobId || returnJob.id, updateData);
+            updateJob(returnJob.jobId || returnJob.id, updateData).then(res => {
+                setJobs(prev => prev.map(j => (j.jobId || j.id) === (res.jobId || res.id) ? res : j));
+            });
         }
 
         setShowReturnModal(false);
@@ -252,8 +344,6 @@ const Jobs = () => {
         }
     }, [jobs, showViewModal, viewJob]);
 
-    const [filterStatus, setFilterStatus] = useState('all');
-    const [searchTerm, setSearchTerm] = useState('');
     const [formData, setFormData] = useState({
         customerName: '',
         phone: '',
@@ -316,6 +406,8 @@ const Jobs = () => {
                 cost: outsourceData.cost,
                 date: new Date().toISOString()
             }
+        }).then(res => {
+            setJobs(prev => prev.map(j => (j.jobId || j.id) === (res.jobId || res.id) ? res : j));
         });
         setShowOutsourceModal(false);
         setOutsourcingJob(null);
@@ -340,6 +432,8 @@ const Jobs = () => {
                 ...receivingJob.outsourced,
                 cost: receiveData.cost
             }
+        }).then(res => {
+            setJobs(prev => prev.map(j => (j.jobId || j.id) === (res.jobId || res.id) ? res : j));
         });
         setShowReceiveModal(false);
         setReceivingJob(null);
@@ -367,10 +461,14 @@ const Jobs = () => {
 
         if (editingJob) {
             const idToUpdate = editingJob.jobId || editingJob.id;
-            updateJob(idToUpdate, dataToSend);
+            updateJob(idToUpdate, dataToSend).then(res => {
+                setJobs(prev => prev.map(j => (j.jobId || j.id) === (res.jobId || res.id) ? res : j));
+            });
             setEditingJob(null);
         } else {
-            addJob(dataToSend);
+            addJob(dataToSend).then(res => {
+                setJobs(prev => [res, ...prev]);
+            });
         }
         resetForm();
         setShowForm(false);
@@ -408,6 +506,7 @@ const Jobs = () => {
     const confirmDelete = async () => {
         if (deletingJobId) {
             await deleteJob(deletingJobId);
+            setJobs(prev => prev.filter(j => (j.jobId || j.id) !== deletingJobId));
             setShowDeleteModal(false);
             setDeletingJobId(null);
         }
@@ -451,22 +550,6 @@ const Jobs = () => {
     };
 
     const isHomeService = (job) => job.type === 'home-service'; // Helper
-
-    const filteredJobs = jobs.filter(job => {
-        const matchesStatus = filterStatus === 'all' || job.status === filterStatus;
-        const searchLower = searchTerm.toLowerCase();
-        const matchesSearch = searchTerm === '' ||
-            (job.jobId || '').toLowerCase().includes(searchLower) ||
-            (job.customerName || '').toLowerCase().includes(searchLower) ||
-            (job.phone || '').includes(searchTerm) ||
-            (job.device || '').toLowerCase().includes(searchLower);
-
-        return matchesStatus && matchesSearch;
-    });
-
-    const sortedJobs = [...filteredJobs].sort((a, b) =>
-        new Date(b.createdAt) - new Date(a.createdAt)
-    );
 
     return (
         <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
@@ -537,7 +620,7 @@ const Jobs = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {sortedJobs.map((job) => (
+                            {jobs.map((job) => (
                                 <tr key={job._id || job.id || job.jobId} className="hover:bg-gray-50/50 transition-colors">
                                     <td className="py-4 px-6">
                                         <span className="font-mono text-sm font-medium text-gray-700">#{(job.jobId || job.id || job._id || '').toString().slice(-6)}</span>
@@ -695,7 +778,7 @@ const Jobs = () => {
                             ))}
                         </div>
                     )}
-                    {sortedJobs.length === 0 && (
+                    {!loading && jobs.length === 0 && (
                         <div className="text-center py-16">
                             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <FiFilter className="w-8 h-8 text-gray-300" />
@@ -1130,6 +1213,72 @@ const Jobs = () => {
                                 ))}
                             </div>
                         </div>
+                    </div>
+
+                    <div className="animate-fade-in bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <div className="flex justify-between items-center mb-2">
+                            <label className="block text-sm font-semibold text-gray-700">Payment Breakdown</label>
+                            <button
+                                type="button"
+                                onClick={() => setPaymentData({
+                                    ...paymentData,
+                                    breakdownItems: [...(paymentData.breakdownItems || []), { description: '', amount: '' }]
+                                })}
+                                className="text-xs flex items-center gap-1 text-blue-600 font-medium hover:text-blue-700"
+                            >
+                                <FiPlus className="w-3 h-3" /> Add Item
+                            </button>
+                        </div>
+
+                        <div className="space-y-2">
+                            {(paymentData.breakdownItems || []).map((item, index) => (
+                                <div key={index} className="flex gap-2 items-center">
+                                    <input
+                                        type="text"
+                                        placeholder="Description"
+                                        className="input-field !bg-white flex-grow text-sm py-2"
+                                        value={item.description}
+                                        onChange={(e) => {
+                                            const newItems = [...paymentData.breakdownItems];
+                                            newItems[index].description = e.target.value;
+                                            setPaymentData({ ...paymentData, breakdownItems: newItems });
+                                        }}
+                                    />
+                                    <div className="relative w-24 shrink-0">
+                                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">₹</span>
+                                        <input
+                                            type="number"
+                                            placeholder="Amt"
+                                            className="input-field !bg-white !pl-5 text-sm py-2"
+                                            value={item.amount}
+                                            onChange={(e) => {
+                                                const newItems = [...paymentData.breakdownItems];
+                                                newItems[index].amount = e.target.value;
+                                                setPaymentData({ ...paymentData, breakdownItems: newItems });
+                                            }}
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const newItems = paymentData.breakdownItems.filter((_, i) => i !== index);
+                                            setPaymentData({ ...paymentData, breakdownItems: newItems });
+                                        }}
+                                        className="text-gray-400 hover:text-red-500 p-1"
+                                    >
+                                        <FiTrash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                        {(paymentData.breakdownItems || []).some(i => i.amount) && (
+                            <div className="flex justify-end mt-2 text-sm">
+                                <span className="text-gray-500 mr-2">Total Breakdown:</span>
+                                <span className="font-semibold text-gray-800">
+                                    ₹{(paymentData.breakdownItems || []).reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0).toLocaleString()}
+                                </span>
+                            </div>
+                        )}
                     </div>
 
                     {paymentData.type === 'discount' && (

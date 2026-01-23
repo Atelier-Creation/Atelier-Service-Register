@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/client';
+import Cropper from 'react-easy-crop';
+import getCroppedImg from '../utils/cropImage';
+import Modal from '../components/ui/Modal';
 import {
     FiSettings, FiBell, FiUser, FiLock, FiShield,
     FiChevronDown, FiChevronRight, FiCheck, FiAlertCircle,
     FiTrash2, FiPlus, FiX,
     FiEyeOff,
-    FiEye
+    FiEye,
+    FiUpload,
+    FiScissors
 } from 'react-icons/fi';
 
 const Settings = () => {
@@ -42,6 +47,109 @@ const Settings = () => {
             fetchUsers();
         }
     }, [activeTab, user]);
+
+    // App Settings State
+    const [appSettings, setAppSettings] = useState({
+        businessName: '',
+        businessAddress: '',
+        logoPreview: null,
+        logoFile: null
+    });
+    const [settingsLoading, setSettingsLoading] = useState(false);
+
+    // Cropper State
+    const [crop, setCrop] = useState({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(1);
+    const [cropImageSrc, setCropImageSrc] = useState(null);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+
+    const onCropComplete = (croppedArea, croppedAreaPixels) => {
+        setCroppedAreaPixels(croppedAreaPixels);
+    };
+
+    const handleFileSelect = (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.addEventListener('load', () => setCropImageSrc(reader.result));
+            reader.readAsDataURL(file);
+            // Clear input value so same file can be selected again if needed
+            e.target.value = null;
+        }
+    };
+
+    const handleCropAndSave = async () => {
+        try {
+            const croppedImageBlob = await getCroppedImg(
+                cropImageSrc,
+                croppedAreaPixels
+            );
+
+            // Create a preview URL
+            const previewUrl = URL.createObjectURL(croppedImageBlob);
+
+            setAppSettings({
+                ...appSettings,
+                logoFile: croppedImageBlob, // This is a Blob, might need to be cast to File for some backends, but FormData accepts Blob
+                logoPreview: previewUrl
+            });
+
+            setCropImageSrc(null); // Close cropper
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    useEffect(() => {
+        if (user?.role === 'admin') {
+            fetchSettings();
+        }
+    }, [user]);
+
+    const getBaseUrl = () => {
+        const url = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        return url.endsWith('/api') ? url.slice(0, -4) : url;
+    };
+
+    const fetchSettings = async () => {
+        try {
+            const { data } = await api.get('/settings');
+            setAppSettings({
+                businessName: data.businessName || '',
+                businessAddress: data.businessAddress || '',
+                logoPreview: data.logo ? `${getBaseUrl()}/${data.logo}` : null,
+                logoFile: null
+            });
+        } catch (error) {
+            console.error("Failed to fetch settings", error);
+        }
+    };
+
+    const handleUpdateSettings = async (e) => {
+        e.preventDefault();
+        setSettingsLoading(true);
+        setStatusMsg({ type: '', text: '' });
+
+        const formData = new FormData();
+        formData.append('businessName', appSettings.businessName);
+        formData.append('businessAddress', appSettings.businessAddress);
+        if (appSettings.logoFile) {
+            // Append with a filename so backend extension validation passes
+            formData.append('logo', appSettings.logoFile, 'logo.png');
+        }
+
+        try {
+            await api.put('/settings', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            setStatusMsg({ type: 'success', text: 'Business settings updated! Reloading...' });
+            setTimeout(() => window.location.reload(), 1500);
+        } catch (error) {
+            setStatusMsg({ type: 'error', text: 'Failed to update settings' });
+        } finally {
+            setSettingsLoading(false);
+        }
+    };
 
     const fetchUsers = async () => {
         try {
@@ -138,7 +246,7 @@ const Settings = () => {
                     <form onSubmit={handleUpdateProfile} className="grid grid-cols-1 gap-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Display Name / Business Name</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
                                 <input
                                     type="text"
                                     className="input-field"
@@ -177,10 +285,68 @@ const Settings = () => {
 
                         <div className="mt-4 flex justify-end">
                             <button type="submit" disabled={loading} className="btn-primary flex items-center gap-2">
-                                {loading ? 'Saving...' : 'Save Changes'}
+                                {loading ? 'Saving...' : 'Save Profile'}
                             </button>
                         </div>
                     </form>
+
+                    {/* Business Settings Section - Admin Only */}
+                    {user?.role === 'admin' && (
+                        <div className="mt-8 border-t border-gray-200 pt-6">
+                            <h3 className="font-bold text-gray-800 mb-4">Business Configuration</h3>
+                            <form onSubmit={handleUpdateSettings} className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
+                                        <input
+                                            type="text"
+                                            className="input-field"
+                                            value={appSettings.businessName}
+                                            onChange={(e) => setAppSettings({ ...appSettings, businessName: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Business Address</label>
+                                        <textarea
+                                            className="input-field"
+                                            rows="3"
+                                            value={appSettings.businessAddress}
+                                            onChange={(e) => setAppSettings({ ...appSettings, businessAddress: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Business Logo (1:1 Ratio)</label>
+                                    <div className="flex items-center gap-4">
+                                        {appSettings.logoPreview && (
+                                            <div className="w-16 h-16 border border-gray-300 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center shrink-0">
+                                                <img src={appSettings.logoPreview} alt="Logo Preview" className="w-full h-full object-contain" />
+                                            </div>
+                                        )}
+                                        <label className="btn-secondary cursor-pointer flex items-center gap-2 text-sm px-4 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                                            <FiUpload />
+                                            <span>Upload Logo</span>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleFileSelect}
+                                                className="hidden"
+                                            />
+                                        </label>
+                                    </div>
+                                </div>
+
+
+
+                                <div className="flex justify-end">
+                                    <button type="submit" disabled={settingsLoading} className="btn-primary flex items-center gap-2">
+                                        {settingsLoading ? 'Updating Business Info...' : 'Update Business Info'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
                 </div>
             )
         },
@@ -446,6 +612,45 @@ const Settings = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Cropper Modal - Refactored to use standard UI Modal */}
+            <Modal
+                isOpen={!!cropImageSrc}
+                onClose={() => setCropImageSrc(null)}
+                title="Crop Logo"
+                className="max-w-md"
+            >
+                <div className="flex flex-col gap-6">
+                    <div className="relative h-80 w-full bg-gray-900 rounded-lg overflow-hidden border border-gray-100 flex items-center justify-center">
+                        <Cropper
+                            image={cropImageSrc}
+                            crop={crop}
+                            zoom={zoom}
+                            aspect={1}
+                            onCropChange={setCrop}
+                            onCropComplete={onCropComplete}
+                            onZoomChange={setZoom}
+                        />
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-2">
+                        <button
+                            type="button"
+                            onClick={() => setCropImageSrc(null)}
+                            className="px-4 py-2 text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-lg text-sm font-medium transition-colors border border-transparent hover:border-gray-200"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleCropAndSave}
+                            className="btn-primary flex items-center gap-2 px-6 py-2 text-xm shadow-lg shadow-blue-500/20"
+                        >
+                            <FiCheck className="w-4 h-4" /> Crop & Save
+                        </button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 };

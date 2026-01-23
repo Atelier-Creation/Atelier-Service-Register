@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -5,7 +6,7 @@ import {
     FiLogOut, FiMenu, FiX, FiTool, FiChevronDown, FiTrendingUp,
     FiChevronLeft, FiChevronRight,
 } from 'react-icons/fi';
-import { useState, useRef, useEffect } from 'react';
+import api from '../api/client';
 
 const Layout = () => {
     const { user, logout } = useAuth();
@@ -18,25 +19,37 @@ const Layout = () => {
     const [showMobileSearch, setShowMobileSearch] = useState(false);
     const userMenuRef = useRef(null);
 
+    // Settings State
+    const [settings, setSettings] = useState({ businessName: '', logo: '' });
+
     useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-                setUserMenuOpen(false);
+        const fetchSettings = async () => {
+            try {
+                const { data } = await api.get('/settings');
+                setSettings(data);
+            } catch (error) {
+                console.error("Failed to fetch settings", error);
             }
         };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
+        fetchSettings();
     }, []);
+
+    // ... existing helpers ...
 
     const handleLogout = () => {
         logout();
         navigate('/login');
     };
 
-    // ... (menuItems remain same)
+    const getBaseUrl = () => {
+        const url = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        return url.endsWith('/api') ? url.slice(0, -4) : url;
+    };
+
+    const logoUrl = settings.logo
+        ? `${getBaseUrl()}/${settings.logo}`
+        : "/favicon.png";
+
     const menuItems = [
         { path: '/', icon: FiHome, label: 'Dashboard' },
         { path: '/jobs', icon: FiFileText, label: 'Orders' },
@@ -66,10 +79,12 @@ const Layout = () => {
                     </div>
                     <div className={`overflow-hidden transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0 ml-0' : 'w-auto opacity-100 ml-3'}`}>
                         <h1 className="font-bold text-gray-800 text-lg leading-tight">Registra</h1>
-                        <p className="text-xs text-gray-400">by Atelier </p>
+                        <p className="text-xs text-gray-400">
+                            {settings.businessName ? `for ${settings.businessName}` : 'by Atelier'}
+                        </p>
                     </div>
 
-                    {/* Desktop Toggle Button - Positioned on the border */}
+                    {/* Desktop Toggle Button */}
                     <button
                         onClick={() => setIsCollapsed(!isCollapsed)}
                         className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white border border-gray-200 rounded-full items-center justify-center text-gray-400 hover:text-blue-600 shadow-sm z-50 hover:bg-gray-50 transition-colors cursor-pointer"
@@ -77,7 +92,7 @@ const Layout = () => {
                         {isCollapsed ? <FiChevronRight size={14} /> : <FiChevronLeft size={14} />}
                     </button>
 
-                    {/* Mobile Close Button (only visible on mobile when open) */}
+                    {/* Mobile Close Button */}
                     <button
                         onClick={() => setSidebarOpen(false)}
                         className="lg:hidden absolute right-4 text-gray-400"
@@ -167,7 +182,6 @@ const Layout = () => {
                                 placeholder="Search jobs, customers, Device..."
                                 className="w-full bg-gray-50 border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:outline-0 focus:ring-blue-400 text-gray-600 placeholder-gray-400"
                             />
-                            {/* <span className="absolute right-3 text-xs text-gray-400 border border-gray-200 rounded px-1.5 py-0.5">⌘K</span> */}
                         </div>
                     </div>
 
@@ -188,8 +202,16 @@ const Layout = () => {
                             <FiSearch className="w-6 h-6" />
                         </button>
 
+                        {/* Show Business Logo near Profile (before separator) */}
+                        {settings.logo && (
+                            <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center border border-gray-100">
+                                <img src={logoUrl} alt="Business Logo" className="w-full h-full object-contain" />
+                            </div>
+                        )}
+
                         <div className="h-8 w-px bg-gray-200 mx-1 hidden lg:block"></div>
 
+                        {/* User Profile... */}
                         <div className="relative" ref={userMenuRef}>
                             <div
                                 onClick={() => setUserMenuOpen(!userMenuOpen)}

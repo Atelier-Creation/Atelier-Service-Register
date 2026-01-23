@@ -26,16 +26,39 @@ const formatStatValue = (val) => {
 };
 
 const StatCard = ({
+    title,
     value,
     label,
     icon: Icon,
     color = "bg-blue-100 text-blue-600",
     decorationColor = "text-blue-600",
     onClick,
-    className = ""
+    className = "",
+    tooltip = null
 }) => {
     return (
         <div className={`card p-4 flex flex-col justify-between relative overflow-hidden group ${className}`}>
+            {/* Title with Info Icon */}
+            {title && (
+                <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{title}</h4>
+                    {tooltip && (
+                        <div className="relative group/tooltip">
+                            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 hover:bg-blue-50 hover:text-blue-600 transition-colors cursor-help">
+                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            {/* Tooltip */}
+                            <div className="absolute right-0 top-6 w-64 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-50 pointer-events-none">
+                                <div className="absolute -top-1 right-2 w-2 h-2 bg-gray-900 transform rotate-45"></div>
+                                {tooltip}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
             <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3 z-10">
                     <div className={`rounded-xl ${typeof Icon === 'string' ? '' : `p-3 ${color}`}`}>
