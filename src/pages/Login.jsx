@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { FiUser, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
@@ -85,10 +86,15 @@ const Login = () => {
 
                 if (!res.success) {
                     setError(res.message || "Invalid username or password");
+                    toast.error(res.message || "Invalid username or password");
                     setIsLoading(false);
+                } else {
+                    toast.success('Login successful!');
                 }
             } catch (err) {
-                setError("Something went wrong. Please try again.");
+                const errorMsg = "Something went wrong. Please try again.";
+                setError(errorMsg);
+                toast.error(errorMsg);
                 setIsLoading(false);
             }
         }
@@ -101,7 +107,7 @@ const Login = () => {
 
     return (
         <div className="min-h-screen bg-gray-200 flex items-center justify-center p-4 relative overflow-hidden">
-            
+
             {/* ... Background Code ... */}
             <div className="absolute inset-0 flex gap-6 justify-center opacity-40 select-none pointer-events-none -skew-y-6 scale-110">
                 <FloatingColumn speed={40} className="flex flex-col gap-6 w-64">

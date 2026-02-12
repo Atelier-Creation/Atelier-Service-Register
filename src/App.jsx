@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { JobProvider } from './context/JobContext';
 import Layout from './components/Layout';
@@ -10,6 +11,7 @@ import Customers from './pages/Customers';
 import Settings from './pages/Settings';
 import OutsourceStats from './pages/OutsourceStats';
 import Reports from './pages/Reports';
+import Marketing from './pages/Marketing';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -76,6 +78,7 @@ function AppRoutes() {
         <Route path="3rd-party-stats" element={<OutsourceStats />} />
         <Route path="search" element={<Search />} />
         <Route path="customers" element={<Customers />} />
+        <Route path="marketing" element={<Marketing />} />
         <Route path="reports" element={<Reports />} />
         <Route path="settings" element={<Settings />} />
       </Route>
@@ -92,6 +95,33 @@ function App() {
       <JobProvider>
         <BrowserRouter>
           <AppRoutes />
+          <Toaster
+            containerStyle={{ zIndex: 100000 }}
+            position="top-right"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                background: '#333',
+                color: '#fff',
+                padding: '16px',
+                borderRadius: '8px',
+              },
+              success: {
+                duration: 3000,
+                iconTheme: {
+                  primary: '#10b981',
+                  secondary: '#fff',
+                },
+              },
+              error: {
+                duration: 4000,
+                iconTheme: {
+                  primary: '#ef4444',
+                  secondary: '#fff',
+                },
+              },
+            }}
+          />
         </BrowserRouter>
       </JobProvider>
     </AuthProvider>

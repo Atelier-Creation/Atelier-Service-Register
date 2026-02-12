@@ -4,8 +4,9 @@ import { useAuth } from '../context/AuthContext';
 import {
     FiHome, FiFileText, FiSearch, FiUsers, FiSettings,
     FiLogOut, FiMenu, FiX, FiTool, FiChevronDown, FiTrendingUp,
-    FiChevronLeft, FiChevronRight,
+    FiChevronLeft, FiChevronRight, FiMessageSquare,
 } from 'react-icons/fi';
+
 import api from '../api/client';
 
 const Layout = () => {
@@ -34,8 +35,6 @@ const Layout = () => {
         fetchSettings();
     }, []);
 
-    // ... existing helpers ...
-
     const handleLogout = () => {
         logout();
         navigate('/login');
@@ -56,6 +55,7 @@ const Layout = () => {
         { path: '/3rd-party-stats', icon: FiTool, label: 'Out Source' },
         { path: '/customers', icon: FiUsers, label: 'Customers' },
         ...(user?.role === 'admin' ? [
+            { path: '/marketing', icon: FiMessageSquare, label: 'Marketing' },
             { path: '/reports', icon: FiTrendingUp, label: 'Reports' },
             { path: '/settings', icon: FiSettings, label: 'Settings' }
         ] : []),

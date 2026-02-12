@@ -1,7 +1,9 @@
 import { useState, useMemo, useEffect } from 'react'; // Added useEffect
+import toast from 'react-hot-toast';
+import { createPortal } from 'react-dom';
 import { useJobs } from '../context/JobContext';
 import api from '../api/client';
-import { FiClock, FiFileText, FiCalendar } from 'react-icons/fi';
+import { FiClock, FiFileText, FiCalendar, FiX, FiPackage, FiMapPin, FiUser, FiTool } from 'react-icons/fi';
 import { BsCurrencyRupee } from "react-icons/bs";
 import Select from '../components/ui/Select';
 import StatCard from '../components/ui/StatCard';
@@ -13,6 +15,15 @@ const OutsourceStats = () => {
     const [loading, setLoading] = useState(true);
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth()); // 0-11
     const [viewActiveOnly, setViewActiveOnly] = useState(false);
+
+    // Modal states
+    const [showOrdersModal, setShowOrdersModal] = useState(false);
+    const [showOrderDetailModal, setShowOrderDetailModal] = useState(false);
+    const [selectedTechnician, setSelectedTechnician] = useState(null);
+    const [technicianOrders, setTechnicianOrders] = useState([]);
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [loadingOrders, setLoadingOrders] = useState(false);
+    const [loadingOrderDetail, setLoadingOrderDetail] = useState(false);
 
     useEffect(() => {
         const fetchOutsourcedJobs = async () => {
@@ -99,6 +110,48 @@ const OutsourceStats = () => {
         return data;
     }, [technicianStats, viewActiveOnly]);
 
+    // Handle technician click to show their orders
+    const handleTechnicianClick = async (technicianName) => {
+        setSelectedTechnician(technicianName);
+        setShowOrdersModal(true);
+        setLoadingOrders(true);
+
+        try {
+            // Filter jobs for this technician
+            const orders = monthlyOutsourcedJobs.filter(job =>
+                job.outsourced && job.outsourced.name === technicianName
+            );
+            setTechnicianOrders(orders);
+        } catch (error) {
+            console.error("Error filtering technician orders:", error);
+            toast.error('Failed to load technician orders');
+            setTechnicianOrders([]);
+        } finally {
+            setLoadingOrders(false);
+        }
+    };
+
+    // Handle order click to show details
+    const handleOrderClick = async (order) => {
+        setLoadingOrderDetail(true);
+        setShowOrderDetailModal(true);
+
+        try {
+            const { data } = await api.get(`/jobs/${order.jobId || order.id || order._id}`);
+            setSelectedOrder(data);
+        } catch (error) {
+            console.error("Error fetching order details:", error);
+            setSelectedOrder(order);
+            toast.error('Failed to load order details');
+        } finally {
+            setLoadingOrderDetail(false);
+        }
+    };
+
+    const closeOrderDetailsAndReopenList = () => {
+        setShowOrderDetailModal(false);
+        setShowOrdersModal(true);
+    };
 
 
     const months = [
@@ -223,7 +276,11 @@ const OutsourceStats = () => {
                                 ))
                             ) : tableData.length > 0 ? (
                                 tableData.map((tech) => (
-                                    <tr key={tech.name} className="hover:bg-gray-50/50 transition-colors">
+                                    <tr
+                                        key={tech.name}
+                                        className="hover:bg-gray-50/50 transition-colors cursor-pointer"
+                                        onClick={() => handleTechnicianClick(tech.name)}
+                                    >
                                         <td className="py-4 px-6  text-gray-800">{tech.name}</td>
                                         <td className="py-4 px-6 text-gray-600">{tech.totalJobs}</td>
                                         <td className="py-4 px-6">
@@ -250,6 +307,204 @@ const OutsourceStats = () => {
                     </table>
                 </div>
             </div>
+
+            {/* Technician Orders Modal */}
+            {showOrdersModal && createPortal(
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+                        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                            <div>
+                                <h2 className="text-xl font-bold text-gray-800">Orders - {selectedTechnician}</h2>
+                                <p className="text-sm text-gray-500 mt-1">Outsourced to this technician in {months[selectedMonth]}</p>
+                            </div>
+                            <button
+                                onClick={() => setShowOrdersModal(false)}
+                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                            >
+                                <FiX className="w-5 h-5 text-gray-500" />
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-6">
+                            {loadingOrders ? (
+                                <div className="space-y-4">
+                                    {Array.from({ length: 3 }).map((_, i) => (
+                                        <div key={i} className="border border-gray-200 rounded-xl p-4">
+                                            <Skeleton className="h-4 w-32 mb-2" />
+                                            <Skeleton className="h-3 w-full" />
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : technicianOrders.length > 0 ? (
+                                <div className="space-y-3">
+                                    {technicianOrders.map((order) => (
+                                        <div
+                                            key={order._id || order.id}
+                                            onClick={() => {
+                                                setShowOrdersModal(false);
+                                                handleOrderClick(order);
+                                            }}
+                                            className="border border-gray-200 rounded-xl p-4 hover:border-purple-300 hover:shadow-md transition-all cursor-pointer group"
+                                        >
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div>
+                                                    <p className="font-semibold text-gray-800 group-hover:text-purple-600 transition-colors">
+                                                        #{order.jobId} - {order.customerName}
+                                                    </p>
+                                                    <p className="text-sm text-gray-500">{order.device}</p>
+                                                </div>
+                                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${order.status === 'outsourced' ? 'bg-orange-100 text-orange-700' :
+                                                        order.status === 'ready' ? 'bg-green-100 text-green-700' :
+                                                            order.status === 'delivered' ? 'bg-blue-100 text-blue-700' :
+                                                                'bg-gray-100 text-gray-700'
+                                                    }`}>
+                                                    {order.status.replace('-', ' ')}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-sm text-gray-600">
+                                                <span>Cost: ₹{order.outsourced?.cost?.toLocaleString() || '0'}</span>
+                                                <span>{new Date(order.outsourced?.date || order.createdAt).toLocaleDateString()}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-12 text-gray-500">
+                                    <FiFileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                                    <p>No orders found for this technician</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+
+            {/* Order Detail Modal */}
+            {showOrderDetailModal && selectedOrder && createPortal(
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+                        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-purple-50 to-blue-50">
+                            <div>
+                                <h2 className="text-xl font-bold text-gray-800">Order Details</h2>
+                                <p className="text-sm text-purple-600 font-semibold">#{selectedOrder.jobId}</p>
+                            </div>
+                            <button
+                                onClick={closeOrderDetailsAndReopenList}
+                                className="p-2 hover:bg-white/50 rounded-lg transition-colors"
+                            >
+                                <FiX className="w-5 h-5 text-gray-500" />
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                            {loadingOrderDetail ? (
+                                <div className="space-y-4">
+                                    <Skeleton className="h-20 w-full" />
+                                    <Skeleton className="h-32 w-full" />
+                                </div>
+                            ) : (
+                                <>
+                                    {/* Customer Info */}
+                                    <div className="border border-gray-200 rounded-xl p-4">
+                                        <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                                            <FiUser className="text-purple-600" />
+                                            Customer Information
+                                        </h3>
+                                        <div className="space-y-2 text-sm">
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">Name:</span>
+                                                <span className="font-medium text-gray-800">{selectedOrder.customerName}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">Phone:</span>
+                                                <span className="font-medium text-gray-800">{selectedOrder.phone}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Device Info */}
+                                    <div className="border border-gray-200 rounded-xl p-4">
+                                        <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                                            <FiPackage className="text-blue-600" />
+                                            Device Information
+                                        </h3>
+                                        <div className="space-y-2 text-sm">
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">Device:</span>
+                                                <span className="font-medium text-gray-800">{selectedOrder.device}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">Issue:</span>
+                                                <span className="font-medium text-gray-800">{selectedOrder.issue}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">Status:</span>
+                                                <span className="font-medium capitalize text-gray-800">{selectedOrder.status.replace('-', ' ')}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Outsource Info */}
+                                    {selectedOrder.outsourced && (
+                                        <div className="border border-purple-200 bg-purple-50 rounded-xl p-4">
+                                            <h3 className="font-bold text-purple-800 mb-3 flex items-center gap-2">
+                                                <FiTool />
+                                                Outsource Information
+                                            </h3>
+                                            <div className="space-y-2 text-sm">
+                                                <div className="flex justify-between">
+                                                    <span className="text-purple-600">Vendor Name:</span>
+                                                    <span className="font-semibold text-purple-900">{selectedOrder.outsourced.name}</span>
+                                                </div>
+                                                {selectedOrder.outsourced.phone && (
+                                                    <div className="flex justify-between">
+                                                        <span className="text-purple-600">Contact:</span>
+                                                        <span className="font-semibold text-purple-900">{selectedOrder.outsourced.phone}</span>
+                                                    </div>
+                                                )}
+                                                <div className="flex justify-between">
+                                                    <span className="text-purple-600">Cost Paid:</span>
+                                                    <span className="font-semibold text-purple-900">₹{selectedOrder.outsourced.cost?.toLocaleString() || '0'}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-purple-600">Outsourced On:</span>
+                                                    <span className="font-semibold text-purple-900">
+                                                        {selectedOrder.outsourced.date ? new Date(selectedOrder.outsourced.date).toLocaleDateString() : 'N/A'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Financials */}
+                                    <div className="border border-gray-200 rounded-xl p-4">
+                                        <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                                            <BsCurrencyRupee className="text-green-600" />
+                                            Payment Information
+                                        </h3>
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                                                <span className="text-gray-600 text-sm">Total Amount:</span>
+                                                <span className="font-bold text-gray-800">₹{selectedOrder.totalAmount?.toLocaleString() || 0}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                                                <span className="text-gray-600 text-sm">Advance Paid:</span>
+                                                <span className="font-semibold text-blue-600">₹{selectedOrder.advanceAmount?.toLocaleString() || 0}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center py-2">
+                                                <span className="text-gray-600 text-sm font-semibold">Pending Amount:</span>
+                                                <span className="font-bold text-amber-600 text-lg">₹{((selectedOrder.totalAmount || 0) - (selectedOrder.advanceAmount || 0))?.toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
         </div>
     );
 };

@@ -1,10 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import toast from 'react-hot-toast';
 import { useJobs } from '../context/JobContext';
-import { FiPhone, FiFileText, FiCalendar, FiTrendingUp, FiGrid, FiList, FiDownload, FiSearch } from 'react-icons/fi';
+import { FiPhone, FiFileText, FiCalendar, FiTrendingUp, FiGrid, FiList, FiDownload, FiSearch, FiX, FiPackage, FiDollarSign, FiClock, FiMapPin, FiUser, FiTool } from 'react-icons/fi';
 import { Skeleton } from '../components/ui/Skeleton';
 import { Link, useNavigate } from 'react-router-dom';
 import { utils, writeFile } from 'xlsx';
 import api from '../api/client';
+import { BiRupee } from 'react-icons/bi';
 
 const Customers = () => {
     const { stats } = useJobs();
@@ -15,6 +18,15 @@ const Customers = () => {
     const [search, setSearch] = useState('');
     const [viewMode, setViewMode] = useState('table');
     const navigate = useNavigate();
+
+    // Modal states
+    const [showOrdersModal, setShowOrdersModal] = useState(false);
+    const [showOrderDetailModal, setShowOrderDetailModal] = useState(false);
+    const [selectedCustomer, setSelectedCustomer] = useState(null);
+    const [customerOrders, setCustomerOrders] = useState([]);
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [loadingOrders, setLoadingOrders] = useState(false);
+    const [loadingOrderDetail, setLoadingOrderDetail] = useState(false);
 
     // Search input state
     const [searchInput, setSearchInput] = useState('');
@@ -56,6 +68,7 @@ const Customers = () => {
             }
         } catch (error) {
             console.error("Error fetching customers:", error);
+            toast.error('Failed to load customers');
         } finally {
             setLoading(false);
         }
@@ -97,12 +110,74 @@ const Customers = () => {
             writeFile(wb, "Client_Directory.xlsx");
         } catch (error) {
             console.error("Export failed", error);
-            alert("Failed to export data");
+            toast.error('Failed to export data');
+            return;
+        }
+        toast.success('Client directory exported successfully');
+    };
+
+    const handleCustomerClick = async (customer) => {
+        setSelectedCustomer(customer);
+        setShowOrdersModal(true);
+        setLoadingOrders(true);
+
+        try {
+            const { data } = await api.get('/jobs', {
+                params: {
+                    search: customer.phone,
+                    limit: 100
+                }
+            });
+            setCustomerOrders(data.jobs || []);
+        } catch (error) {
+            console.error("Error fetching customer orders:", error);
+            setCustomerOrders([]);
+            toast.error('Failed to load customer orders');
+        } finally {
+            setLoadingOrders(false);
         }
     };
 
-    const handleCustomerClick = (phone) => {
-        navigate(`/jobs?search=${phone}`);
+    const handleOrderClick = async (order) => {
+        setLoadingOrderDetail(true);
+        setShowOrderDetailModal(true);
+
+        try {
+            const { data } = await api.get(`/jobs/${order.jobId || order.id || order._id}`);
+            setSelectedOrder(data);
+        } catch (error) {
+            console.error("Error fetching order details:", error);
+            setSelectedOrder(order);
+            toast.error('Failed to load order details');
+        } finally {
+            setLoadingOrderDetail(false);
+        }
+    };
+
+    const closeOrdersModal = () => {
+        setShowOrdersModal(false);
+        setSelectedCustomer(null);
+        setCustomerOrders([]);
+        // Also close order detail if it's open
+        setShowOrderDetailModal(false);
+        setSelectedOrder(null);
+    };
+
+    const closeOrderDetailModal = () => {
+        setShowOrderDetailModal(false);
+        setSelectedOrder(null);
+        // Don't close the orders modal - keep it open
+    };
+
+    const getStatusBadgeClass = (status) => {
+        const statusClasses = {
+            'pending': 'bg-yellow-100 text-yellow-700 border-yellow-200',
+            'in-progress': 'bg-blue-100 text-blue-700 border-blue-200',
+            'ready': 'bg-purple-100 text-purple-700 border-purple-200',
+            'delivered': 'bg-green-100 text-green-700 border-green-200',
+            'cancelled': 'bg-red-100 text-red-700 border-red-200'
+        };
+        return statusClasses[status] || 'bg-gray-100 text-gray-700 border-gray-200';
     };
 
     return (
@@ -229,7 +304,7 @@ const Customers = () => {
                                 {customers.map((customer) => (
                                     <tr
                                         key={customer._id}
-                                        onClick={() => handleCustomerClick(customer.phone)}
+                                        onClick={() => handleCustomerClick(customer)}
                                         className="hover:bg-gray-50/50 transition-colors group cursor-pointer"
                                     >
                                         <td className="py-4 px-6">
@@ -280,7 +355,7 @@ const Customers = () => {
                         {customers.map((customer) => (
                             <div
                                 key={customer._id}
-                                onClick={() => handleCustomerClick(customer.phone)}
+                                onClick={() => handleCustomerClick(customer)}
                                 className="group border border-gray-200 rounded-xl p-5 hover:border-blue-400 hover:shadow-lg transition-all duration-300 bg-white cursor-pointer"
                             >
                                 <div className="flex items-start justify-between mb-4">
@@ -379,6 +454,406 @@ const Customers = () => {
                     </div>
                 )}
             </div>
+
+            {/* Orders Modal */}
+            {showOrdersModal && createPortal(
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={closeOrdersModal}>
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-800 capitalize">
+                                    {selectedCustomer?.name}'s Orders
+                                </h2>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    <FiPhone className="inline w-3 h-3 mr-1" />
+                                    {selectedCustomer?.phone}
+                                </p>
+                            </div>
+                            <button
+                                onClick={closeOrdersModal}
+                                className="p-2 hover:bg-white rounded-full transition-colors"
+                            >
+                                <FiX className="w-6 h-6 text-gray-500" />
+                            </button>
+                        </div>
+
+                        {/* Customer Stats */}
+                        <div className="grid grid-cols-3 gap-4 p-6 bg-gray-50 border-b border-gray-200">
+                            <div className="text-center">
+                                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Total Orders</p>
+                                <p className="text-2xl font-bold text-gray-800">{selectedCustomer?.totalJobs || 0}</p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Total Spent</p>
+                                <p className="text-2xl font-bold text-emerald-600">₹{selectedCustomer?.totalSpent?.toLocaleString() || 0}</p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Pending</p>
+                                <p className="text-2xl font-bold text-amber-600">₹{selectedCustomer?.pendingAmount?.toLocaleString() || 0}</p>
+                            </div>
+                        </div>
+
+                        {/* Orders List */}
+                        <div className="p-6 overflow-y-auto max-h-[50vh]">
+                            {loadingOrders ? (
+                                <div className="space-y-4">
+                                    {Array.from({ length: 3 }).map((_, i) => (
+                                        <div key={i} className="border border-gray-200 rounded-xl p-4">
+                                            <div className="flex items-center justify-between">
+                                                <Skeleton className="h-5 w-24" />
+                                                <Skeleton className="h-6 w-20" />
+                                            </div>
+                                            <Skeleton className="h-4 w-full mt-3" />
+                                            <Skeleton className="h-4 w-2/3 mt-2" />
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : customerOrders.length === 0 ? (
+                                <div className="text-center py-12">
+                                    <FiPackage className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                                    <p className="text-gray-400 text-lg">No orders found</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {customerOrders.map((order) => (
+                                        <div
+                                            key={order._id}
+                                            onClick={() => handleOrderClick(order)}
+                                            className="border border-gray-200 rounded-xl p-4 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer group"
+                                        >
+                                            <div className="flex items-start justify-between mb-3">
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <span className="font-bold text-gray-800 text-lg">#{order.jobId}</span>
+                                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusBadgeClass(order.status)}`}>
+                                                            {order.status}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-gray-600 text-sm line-clamp-1">
+                                                        <FiTool className="inline w-3 h-3 mr-1" />
+                                                        {order.deviceType} - {order.brand} {order.model}
+                                                    </p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="font-bold text-lg text-gray-800">₹{order.totalAmount || 0}</p>
+                                                    {(order.totalAmount - order.advanceAmount) > 0 && (
+                                                        <p className="text-xs text-amber-600 font-semibold">Due: ₹{(order.totalAmount - order.advanceAmount)}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-4 text-xs text-gray-500 pt-3 border-t border-gray-100">
+                                                <span className="flex items-center gap-1">
+                                                    <FiCalendar className="w-3 h-3" />
+                                                    {new Date(order.createdAt).toLocaleDateString()}
+                                                </span>
+                                                {order.issue && (
+                                                    <span className="flex-1 truncate">
+                                                        {order.issue}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+
+            {/* Order Detail Modal */}
+            {showOrderDetailModal && createPortal(
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" onClick={closeOrderDetailModal}>
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-800">Order Details</h2>
+                                {selectedOrder && (
+                                    <p className="text-sm text-gray-500 mt-1">
+                                        Job ID: <span className="font-semibold">#{selectedOrder.jobId}</span>
+                                    </p>
+                                )}
+                            </div>
+                            <button
+                                onClick={closeOrderDetailModal}
+                                className="p-2 hover:bg-white rounded-full transition-colors"
+                            >
+                                <FiX className="w-6 h-6 text-gray-500" />
+                            </button>
+                        </div>
+
+                        {/* Order Details Content */}
+                        <div className="p-6 overflow-y-auto max-h-[75vh]">
+                            {loadingOrderDetail ? (
+                                <div className="space-y-4">
+                                    {Array.from({ length: 5 }).map((_, i) => (
+                                        <div key={i}>
+                                            <Skeleton className="h-4 w-24 mb-2" />
+                                            <Skeleton className="h-6 w-full" />
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : selectedOrder ? (
+                                <div className="space-y-6">
+                                    {/* Status */}
+                                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                                        <span className="text-sm font-semibold text-gray-600">Status</span>
+                                        <span className={`px-4 py-2 rounded-full text-sm font-bold border ${getStatusBadgeClass(selectedOrder.status)}`}>
+                                            {selectedOrder.status}
+                                        </span>
+                                    </div>
+
+                                    {/* Customer Information */}
+                                    <div className="border border-gray-200 rounded-xl p-4">
+                                        <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                                            <FiUser className="w-5 h-5 text-blue-600" />
+                                            Customer Information
+                                        </h3>
+                                        <div className="grid grid-cols-2 gap-3 text-sm">
+                                            <div>
+                                                <p className="text-gray-500 mb-1">Name</p>
+                                                <p className="font-semibold text-gray-800 capitalize">{selectedOrder.customerName}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-gray-500 mb-1">Phone</p>
+                                                <p className="font-semibold text-gray-800">{selectedOrder.phone}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Device Information */}
+                                    <div className="border border-gray-200 rounded-xl p-4">
+                                        <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                                            <FiTool className="w-5 h-5 text-purple-600" />
+                                            Device Information
+                                        </h3>
+                                        <div className="grid grid-cols-2 gap-3 text-sm">
+                                            <div>
+                                                <p className="text-gray-500 mb-1">Device Type</p>
+                                                <p className="font-semibold text-gray-800">{selectedOrder.deviceType}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-gray-500 mb-1">Brand</p>
+                                                <p className="font-semibold text-gray-800">{selectedOrder.brand}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-gray-500 mb-1">Model</p>
+                                                <p className="font-semibold text-gray-800">{selectedOrder.model}</p>
+                                            </div>
+                                            {selectedOrder.imei && (
+                                                <div>
+                                                    <p className="text-gray-500 mb-1">IMEI/Serial</p>
+                                                    <p className="font-semibold text-gray-800">{selectedOrder.imei}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Issue & Solution */}
+                                    <div className="border border-gray-200 rounded-xl p-4">
+                                        <h3 className="font-bold text-gray-800 mb-3">Issue Description</h3>
+                                        <p className="text-gray-600 text-sm bg-gray-50 p-3 rounded-lg">{selectedOrder.issue || 'N/A'}</p>
+
+                                        {selectedOrder.solution && (
+                                            <>
+                                                <h3 className="font-bold text-gray-800 mb-3 mt-4">Solution</h3>
+                                                <p className="text-gray-600 text-sm bg-green-50 p-3 rounded-lg">{selectedOrder.solution}</p>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {/* Service Type & Address */}
+                                    {selectedOrder.type === 'home-service' && (
+                                        <div className="border border-gray-200 rounded-xl p-4">
+                                            <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                                                <FiMapPin className="w-5 h-5 text-red-600" />
+                                                Home Service Details
+                                            </h3>
+                                            <div className="space-y-3 text-sm">
+                                                {selectedOrder.address && (
+                                                    <div>
+                                                        <p className="text-gray-500 mb-1">Address</p>
+                                                        <p className="font-semibold text-gray-800">{selectedOrder.address}</p>
+                                                    </div>
+                                                )}
+                                                {selectedOrder.visitDate && (
+                                                    <div>
+                                                        <p className="text-gray-500 mb-1">Visit Date</p>
+                                                        <p className="font-semibold text-gray-800">
+                                                            {new Date(selectedOrder.visitDate).toLocaleDateString()}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Payment Information */}
+                                    <div className="border border-gray-200 rounded-xl p-4">
+                                        <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                                            <BiRupee className="w-5 h-5 text-emerald-600" />
+                                            Payment Information
+                                        </h3>
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                                                <span className="text-gray-600 text-sm">Total Cost</span>
+                                                <span className="font-bold text-gray-800">₹{selectedOrder.totalAmount?.toLocaleString() || 0}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                                                <span className="text-gray-600 text-sm">Advance Paid</span>
+                                                <span className="font-semibold text-blue-600">₹{selectedOrder.advanceAmount?.toLocaleString() || 0}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center py-2">
+                                                <span className="text-gray-600 text-sm font-semibold">Pending Amount</span>
+                                                <span className="font-bold text-amber-600 text-lg">₹{((selectedOrder.totalAmount || 0) - (selectedOrder.advanceAmount || 0))?.toLocaleString()}</span>
+                                            </div>
+                                            {(() => {
+                                                let breakdownData = selectedOrder.paymentBreakdown;
+
+                                                // If no structured breakdown, try to parse from note
+                                                if ((!breakdownData || breakdownData.length === 0) && selectedOrder.note && selectedOrder.note.includes('Breakdown:')) {
+                                                    const breakdownMatch = selectedOrder.note.match(/Breakdown:\s*(.+?)\s*\(Total:/);
+                                                    if (breakdownMatch) {
+                                                        const itemsString = breakdownMatch[1];
+                                                        const items = itemsString.split(',').map(item => {
+                                                            const parts = item.trim().split(/:\s*₹/);
+                                                            if (parts.length === 2) {
+                                                                return {
+                                                                    description: parts[0].trim(),
+                                                                    amount: parseFloat(parts[1].replace(/,/g, '')) || 0
+                                                                };
+                                                            }
+                                                            return null;
+                                                        }).filter(item => item !== null);
+
+                                                        if (items.length > 0) {
+                                                            breakdownData = items;
+                                                        }
+                                                    }
+                                                }
+
+                                                return breakdownData && Array.isArray(breakdownData) && breakdownData.length > 0 && (
+                                                    <div className="mt-3 pt-3 border-t border-gray-200">
+                                                        <p className="text-gray-500 text-xs mb-2 font-semibold">Payment Breakdown</p>
+                                                        <div className="bg-blue-50 rounded-lg overflow-hidden">
+                                                            <table className="w-full text-sm">
+                                                                <thead className="bg-blue-100">
+                                                                    <tr>
+                                                                        <th className="text-left py-2 px-3 text-gray-700 font-semibold">Description</th>
+                                                                        <th className="text-right py-2 px-3 text-gray-700 font-semibold">Amount</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    {breakdownData.map((item, index) => (
+                                                                        <tr key={index} className="border-t border-blue-200">
+                                                                            <td className="py-2 px-3 text-gray-700">{item.description}</td>
+                                                                            <td className="text-right py-2 px-3 font-semibold text-gray-800">₹{item.amount?.toLocaleString()}</td>
+                                                                        </tr>
+                                                                    ))}
+                                                                    <tr className="border-t-2 border-blue-300 bg-blue-200/50">
+                                                                        <td className="py-2 px-3 font-bold text-gray-800">Total</td>
+                                                                        <td className="text-right py-2 px-3 font-bold text-gray-800">
+                                                                            ₹{breakdownData.reduce((sum, item) => sum + (item.amount || 0), 0).toLocaleString()}
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+                                    </div>
+
+                                    {/* Dates */}
+                                    <div className="border border-gray-200 rounded-xl p-4">
+                                        <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                                            <FiClock className="w-5 h-5 text-indigo-600" />
+                                            Timeline
+                                        </h3>
+                                        <div className="grid grid-cols-2 gap-3 text-sm">
+                                            <div>
+                                                <p className="text-gray-500 mb-1">Created Date</p>
+                                                <p className="font-semibold text-gray-800">
+                                                    {new Date(selectedOrder.createdAt).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                            {selectedOrder.estimatedDelivery && (
+                                                <div>
+                                                    <p className="text-gray-500 mb-1">Expected Delivery</p>
+                                                    <p className="font-semibold text-gray-800">
+                                                        {new Date(selectedOrder.estimatedDelivery).toLocaleDateString()}
+                                                    </p>
+                                                </div>
+                                            )}
+                                            {selectedOrder.deliveryDate && (
+                                                <div>
+                                                    <p className="text-gray-500 mb-1">Delivered On</p>
+                                                    <p className="font-semibold text-green-600">
+                                                        {new Date(selectedOrder.deliveryDate).toLocaleDateString()}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Outsource Information */}
+                                    {selectedOrder.outsourced && (
+                                        <div className="border border-purple-200 bg-purple-50 rounded-xl p-4">
+                                            <h3 className="font-bold text-purple-800 mb-3">3rd Party Outsource Details</h3>
+                                            <div className="grid grid-cols-2 gap-3 text-sm">
+                                                {selectedOrder.outsourced.name && (
+                                                    <div>
+                                                        <p className="text-purple-600 mb-1">Vendor Name</p>
+                                                        <p className="font-semibold text-gray-800">{selectedOrder.outsourced.name}</p>
+                                                    </div>
+                                                )}
+                                                {selectedOrder.outsourced.phone && (
+                                                    <div>
+                                                        <p className="text-purple-600 mb-1">Contact</p>
+                                                        <p className="font-semibold text-gray-800">{selectedOrder.outsourced.phone}</p>
+                                                    </div>
+                                                )}
+                                                {selectedOrder.outsourced.cost !== undefined && (
+                                                    <div>
+                                                        <p className="text-purple-600 mb-1">Cost Paid</p>
+                                                        <p className="font-semibold text-gray-800">₹{selectedOrder.outsourced.cost}</p>
+                                                    </div>
+                                                )}
+                                                {selectedOrder.outsourced.date && (
+                                                    <div>
+                                                        <p className="text-purple-600 mb-1">Outsourced On</p>
+                                                        <p className="font-semibold text-gray-800">
+                                                            {new Date(selectedOrder.outsourced.date).toLocaleDateString()}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Notes */}
+                                    {selectedOrder.note && (
+                                        <div className="border border-gray-200 rounded-xl p-4">
+                                            <h3 className="font-bold text-gray-800 mb-3">Additional Notes</h3>
+                                            <p className="text-gray-600 text-sm bg-gray-50 p-3 rounded-lg">{selectedOrder.note}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="text-center py-12">
+                                    <p className="text-gray-400">Order details not available</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
         </div>
     );
 };

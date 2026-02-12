@@ -1,14 +1,17 @@
 import { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import toast from 'react-hot-toast';
 import { useJobs } from '../context/JobContext';
 import { useAuth } from '../context/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
+import OTPVerification from '../components/OTPVerification';
 import Modal from '../components/ui/Modal';
 import { Skeleton } from '../components/ui/Skeleton';
 import CreatableSelect from '../components/ui/CreatableSelect';
 import Select from '../components/ui/Select';
 import api from '../api/client';
-import { FiPlus, FiEdit2, FiTrash2, FiX, FiSave, FiFilter, FiSearch, FiExternalLink, FiCheckSquare, FiEye, FiRotateCcw, FiHome, FiMapPin, FiCalendar } from 'react-icons/fi';
-import { BiRupee } from 'react-icons/bi';
+import { FiPlus, FiEdit2, FiTrash2, FiX, FiSave, FiFilter, FiSearch, FiExternalLink, FiCheckSquare, FiEye, FiRotateCcw, FiHome, FiMapPin, FiCalendar, FiCheckCircle } from 'react-icons/fi';
+import { BiBadgeCheck, BiRupee } from 'react-icons/bi';
 
 const DEVICE_CATEGORIES = {
     Mobile: ['Apple', 'Samsung', 'Google', 'OnePlus', 'Xiaomi', 'Oppo', 'Vivo', 'Realme', 'Motorola'],
@@ -73,6 +76,7 @@ const Jobs = () => {
             }
         } catch (error) {
             console.error("Failed to fetch jobs", error);
+            toast.error('Failed to load orders');
         } finally {
             setLoading(false);
             setIsInitialLoad(false);
@@ -135,6 +139,33 @@ const Jobs = () => {
     const [editingJob, setEditingJob] = useState(null);
     const [showOutsourceModal, setShowOutsourceModal] = useState(false);
     const [outsourcingJob, setOutsourcingJob] = useState(null);
+
+    // OTP & Settings State
+    const [whatsappSettings, setWhatsappSettings] = useState(null);
+    const [showOtpModal, setShowOtpModal] = useState(false);
+    const [otpVerified, setOtpVerified] = useState(false);
+    const [verifyingPhone, setVerifyingPhone] = useState('');
+
+    // Add simple api import if not available globally (it is imported at top)
+    // Add client import at top if missing? It wasn't imported in my view_file_outline but I saw it used in line 148: api.get...
+    // Wait, check imports again. view_file_outline lines 1-20 didn't show `import api ...`.
+    // It showed `import { useJobs } from ...`.
+    // Let me check if `api` is imported.
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                // Check if user is logged in before fetching
+                if (user) {
+                    const { data } = await api.get('/settings');
+                    setWhatsappSettings(data.whatsapp);
+                }
+            } catch (error) {
+                console.error('Failed to fetch settings', error);
+            }
+        };
+        fetchSettings();
+    }, [user]);
     const [outsourceData, setOutsourceData] = useState({ name: '', phone: '', cost: '' });
     const [vendors, setVendors] = useState([]);
     const costInputRef = useRef(null);
@@ -169,7 +200,6 @@ const Jobs = () => {
             type: 'full',
             discountAmount: '',
             finalAmount: balance,
-            finalAmount: balance,
             mode: 'Cash',
             warranty: job.warranty || '',
             breakdownItems: [{ description: '', amount: '' }]
@@ -193,9 +223,17 @@ const Jobs = () => {
         }
 
         let breakdownNote = '';
+        let paymentBreakdown = null;
         if (paymentData.breakdownItems && paymentData.breakdownItems.length > 0) {
             const validItems = paymentData.breakdownItems?.filter(i => i.description.trim() || i.amount);
             if (validItems.length > 0) {
+                // Save structured data for table display
+                paymentBreakdown = validItems.map(i => ({
+                    description: i.description || 'Item',
+                    amount: parseFloat(i.amount) || 0
+                }));
+
+                // Also create note string for backward compatibility
                 const itemsStr = validItems.map(i => `${i.description || 'Item'}: ₹${i.amount || 0}`).join(', ');
                 const total = validItems.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
                 breakdownNote = `. Breakdown: ${itemsStr} (Total: ₹${total})`;
@@ -208,33 +246,45 @@ const Jobs = () => {
             totalAmount: newTotal,
             advanceAmount: newAdvance,
             warranty: paymentData.warranty,
-            warranty: paymentData.warranty,
-            warranty: paymentData.warranty,
-            note: `Payment collected via ${paymentData.mode || 'Cash'}${breakdownNote}`
+            note: `Payment collected via ${paymentData.mode || 'Cash'}${breakdownNote}`,
+            paymentBreakdown: paymentBreakdown
         };
 
         if (paymentFiles.length > 0) {
             const fd = new FormData();
             Object.keys(updateData).forEach(key => {
-                if (key !== 'images' && key !== 'statusHistory' && key !== 'createdAt' && key !== 'updatedAt') {
-                    fd.append(key, updateData[key]);
+                const value = updateData[key];
+                // Skip metadata fields and null/empty values
+                if (key !== 'images' && key !== 'statusHistory' && key !== 'createdAt' && key !== 'updatedAt' && key !== '_id' && key !== '__v') {
+                    // Skip null, undefined, empty strings, and the string "null"
+                    if (value !== null && value !== undefined && value !== '' && value !== 'null') {
+                        // Handle outsourced object separately
+                        if (key === 'outsourced' && typeof value === 'object') {
+                            fd.append(key, JSON.stringify(value));
+                        } else {
+                            fd.append(key, value);
+                        }
+                    }
                 }
             });
-            fd.append('status', 'delivered');
-            fd.append('totalAmount', newTotal);
-            fd.append('advanceAmount', newAdvance);
-            fd.append('note', updateData.note);
-            fd.append('warranty', paymentData.warranty);
 
             paymentFiles.forEach(file => fd.append('afterImages', file));
 
             updateJob(paymentJob.jobId || paymentJob.id, fd).then(res => {
                 // Update local list
                 setJobs(prev => prev.map(j => (j.jobId || j.id) === (res.jobId || res.id) ? res : j));
+                toast.success('Payment received and order delivered successfully!');
+            }).catch(err => {
+                console.error('Payment update failed', err);
+                toast.error('Failed to process payment');
             });
         } else {
             updateJob(paymentJob.jobId || paymentJob.id, updateData).then(res => {
                 setJobs(prev => prev.map(j => (j.jobId || j.id) === (res.jobId || res.id) ? res : j));
+                toast.success('Payment received and order delivered successfully!');
+            }).catch(err => {
+                console.error('Payment update failed', err);
+                toast.error('Failed to process payment');
             });
         }
 
@@ -274,9 +324,9 @@ const Jobs = () => {
         if (returnData.type === 'service-charge') {
             const charge = parseFloat(returnData.serviceCharge) || 0;
             newTotal = charge;
-            // Balance logic: if advance > charge, maybe refund? Assuming simple model where total becomes the charge.
-            // If advance exists, it covers the charge. If not, they pay.
-            // Balance = Total - Advance.
+            // If the customer paid advance, it should cover the service charge
+            // Set advance to match the service charge so balance is 0
+            newAdvance = charge;
             note = `Returned with service charge: ₹${charge}. ${returnData.note}`;
         } else {
             // Return without repair. Total should effectively be 0 or equal to advance if we keep it?
@@ -290,29 +340,48 @@ const Jobs = () => {
             ...returnJob,
             status: 'returned', // Item is leaving shop
             totalAmount: newTotal,
-            // advanceAmount stays same
+            advanceAmount: newAdvance,
             note: note
         };
+
+        // Remove null, undefined, and empty string values to prevent validation errors
+        Object.keys(updateData).forEach(key => {
+            if (updateData[key] === null || updateData[key] === undefined || updateData[key] === '') {
+                delete updateData[key];
+            }
+        });
 
         if (paymentFiles.length > 0) {
             const fd = new FormData();
             Object.keys(updateData).forEach(key => {
-                if (key !== 'images' && key !== 'statusHistory' && key !== 'createdAt' && key !== 'updatedAt') {
-                    fd.append(key, updateData[key]);
+                const value = updateData[key];
+                // Skip metadata fields
+                if (key !== 'images' && key !== 'statusHistory' && key !== 'createdAt' && key !== 'updatedAt' && key !== '_id' && key !== '__v') {
+                    // Handle outsourced object separately
+                    if (key === 'outsourced' && typeof value === 'object') {
+                        fd.append(key, JSON.stringify(value));
+                    } else {
+                        fd.append(key, value);
+                    }
                 }
             });
-            fd.append('status', 'returned');
-            fd.append('totalAmount', newTotal);
-            fd.append('note', note);
 
             paymentFiles.forEach(file => fd.append('afterImages', file));
 
             updateJob(returnJob.jobId || returnJob.id, fd).then(res => {
                 setJobs(prev => prev.map(j => (j.jobId || j.id) === (res.jobId || res.id) ? res : j));
+                toast.success('Order returned successfully');
+            }).catch(err => {
+                console.error('Return update failed', err);
+                toast.error('Failed to process return');
             });
         } else {
             updateJob(returnJob.jobId || returnJob.id, updateData).then(res => {
                 setJobs(prev => prev.map(j => (j.jobId || j.id) === (res.jobId || res.id) ? res : j));
+                toast.success('Order returned successfully');
+            }).catch(err => {
+                console.error('Return update failed', err);
+                toast.error('Failed to process return');
             });
         }
 
@@ -408,6 +477,10 @@ const Jobs = () => {
             }
         }).then(res => {
             setJobs(prev => prev.map(j => (j.jobId || j.id) === (res.jobId || res.id) ? res : j));
+            toast.success(`Order outsourced to ${outsourceData.name}`);
+        }).catch(err => {
+            console.error('Outsource update failed', err);
+            toast.error('Failed to outsource order');
         });
         setShowOutsourceModal(false);
         setOutsourcingJob(null);
@@ -434,6 +507,10 @@ const Jobs = () => {
             }
         }).then(res => {
             setJobs(prev => prev.map(j => (j.jobId || j.id) === (res.jobId || res.id) ? res : j));
+            toast.success('Order received back from 3rd party');
+        }).catch(err => {
+            console.error('Receive back update failed', err);
+            toast.error('Failed to update order status');
         });
         setShowReceiveModal(false);
         setReceivingJob(null);
@@ -441,6 +518,20 @@ const Jobs = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        // OTP Verification Logic
+        if (!editingJob && whatsappSettings?.enabled && whatsappSettings?.otpVerification) {
+            // Check if attempting to bypass or if verified
+            if (!otpVerified) {
+                if (!formData.phone || formData.phone.length < 10) {
+                    toast.error('Please enter a valid phone number for OTP verification');
+                    return;
+                }
+                setVerifyingPhone(formData.phone);
+                setShowOtpModal(true);
+                return;
+            }
+        }
 
         // Construct legacy device string for table display
         const fullDeviceName = `${formData.brand} ${formData.model} (${formData.deviceType})`.trim();
@@ -463,11 +554,19 @@ const Jobs = () => {
             const idToUpdate = editingJob.jobId || editingJob.id;
             updateJob(idToUpdate, dataToSend).then(res => {
                 setJobs(prev => prev.map(j => (j.jobId || j.id) === (res.jobId || res.id) ? res : j));
+                toast.success('Order updated successfully');
+            }).catch(err => {
+                console.error('Update failed', err);
+                toast.error('Failed to update order');
             });
             setEditingJob(null);
         } else {
             addJob(dataToSend).then(res => {
                 setJobs(prev => [res, ...prev]);
+                toast.success('Order created successfully');
+            }).catch(err => {
+                console.error('Create failed', err);
+                toast.error('Failed to create order');
             });
         }
         resetForm();
@@ -505,8 +604,14 @@ const Jobs = () => {
 
     const confirmDelete = async () => {
         if (deletingJobId) {
-            await deleteJob(deletingJobId);
-            setJobs(prev => prev?.filter(j => (j.jobId || j.id) !== deletingJobId));
+            try {
+                await deleteJob(deletingJobId);
+                setJobs(prev => prev?.filter(j => (j.jobId || j.id) !== deletingJobId));
+                toast.success('Order deleted successfully');
+            } catch (err) {
+                console.error('Delete failed', err);
+                toast.error('Failed to delete order');
+            }
             setShowDeleteModal(false);
             setDeletingJobId(null);
         }
@@ -527,9 +632,14 @@ const Jobs = () => {
             advanceAmount: '',
             totalAmount: '',
             status: 'received',
+            warranty: '',
+            type: 'walk-in',
+            address: '',
+            visitDate: ''
         });
         setBeforeFiles([]);
         setAfterFiles([]);
+        setOtpVerified(false);
     };
 
     const handleChange = (e) => {
@@ -828,7 +938,22 @@ const Jobs = () => {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                                    <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="input-field" required />
+                                    <div className="relative">
+                                        {otpVerified && (
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 animate-in zoom-in duration-200">
+                                                <BiBadgeCheck className="w-5 h-5" />
+                                            </div>
+                                        )}
+                                        <input
+                                            type="tel"
+                                            name="phone"
+                                            value={formData.phone}
+                                            onChange={handleChange}
+                                            className={`input-field transition-all ${otpVerified ? '!pr-10 bg-green-50 text-green-900 border-green-200 cursor-not-allowed font-medium' : ''}`}
+                                            required
+                                            disabled={otpVerified}
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
@@ -976,7 +1101,7 @@ const Jobs = () => {
                         <h4 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">Billing Information</h4>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Total Amount</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Estimation Amount</label>
                                 <div className="relative">
                                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">₹</span>
                                     <input type="number" name="totalAmount" value={formData.totalAmount} onChange={handleChange} className="input-field !pl-6" required />
@@ -1557,6 +1682,63 @@ const Jobs = () => {
                                             <span className="text-gray-700">Balance:</span>
                                             <span>₹{((parseFloat(viewJob.totalAmount || 0) - parseFloat(viewJob.advanceAmount || 0))).toLocaleString()}</span>
                                         </div>
+
+                                        {/* Payment Breakdown Table */}
+                                        {(() => {
+                                            let breakdownData = viewJob.paymentBreakdown;
+
+                                            // If no structured breakdown, try to parse from note
+                                            if ((!breakdownData || breakdownData.length === 0) && viewJob.note && viewJob.note.includes('Breakdown:')) {
+                                                const breakdownMatch = viewJob.note.match(/Breakdown:\s*(.+?)\s*\(Total:/);
+                                                if (breakdownMatch) {
+                                                    const itemsString = breakdownMatch[1];
+                                                    const items = itemsString.split(',').map(item => {
+                                                        const parts = item.trim().split(/:\s*₹/);
+                                                        if (parts.length === 2) {
+                                                            return {
+                                                                description: parts[0].trim(),
+                                                                amount: parseFloat(parts[1].replace(/,/g, '')) || 0
+                                                            };
+                                                        }
+                                                        return null;
+                                                    }).filter(item => item !== null);
+
+                                                    if (items.length > 0) {
+                                                        breakdownData = items;
+                                                    }
+                                                }
+                                            }
+
+                                            return breakdownData && Array.isArray(breakdownData) && breakdownData.length > 0 && (
+                                                <div className="mt-3 pt-3 border-t border-gray-200">
+                                                    <p className="text-gray-500 text-xs mb-2 font-semibold">Payment Breakdown</p>
+                                                    <div className="bg-blue-50 rounded-lg overflow-hidden">
+                                                        <table className="w-full text-sm">
+                                                            <thead className="bg-blue-100">
+                                                                <tr>
+                                                                    <th className="text-left py-2 px-3 text-gray-700 font-semibold">Description</th>
+                                                                    <th className="text-right py-2 px-3 text-gray-700 font-semibold">Amount</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {breakdownData.map((item, index) => (
+                                                                    <tr key={index} className="border-t border-blue-200">
+                                                                        <td className="py-2 px-3 text-gray-700">{item.description}</td>
+                                                                        <td className="text-right py-2 px-3 font-semibold text-gray-800">₹{item.amount?.toLocaleString()}</td>
+                                                                    </tr>
+                                                                ))}
+                                                                <tr className="border-t-2 border-blue-300 bg-blue-200/50">
+                                                                    <td className="py-2 px-3 font-bold text-gray-800">Total</td>
+                                                                    <td className="text-right py-2 px-3 font-bold text-gray-800">
+                                                                        ₹{breakdownData.reduce((sum, item) => sum + (item.amount || 0), 0).toLocaleString()}
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
                                     </div>
                                 </div>
                             </div>
@@ -1677,6 +1859,30 @@ const Jobs = () => {
                     </div>
                 </div>
             </Modal>
+            {/* OTP Verification Modal */}
+            {showOtpModal && createPortal(
+                <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+                    <OTPVerification
+                        phone={verifyingPhone}
+                        onVerified={() => {
+                            setOtpVerified(true);
+                            setShowOtpModal(false);
+                            // We need to re-trigger submission.
+                            // Since verified is now true, the user can click save again.
+                            // Or we can auto-trigger? Auto-trigger is better UX.
+                            // But handleSubmit takes event 'e'.
+                            // We can use a ref to form or just let user click again with success message.
+                            toast.success('Verified! Click Save Order to finish.', { icon: '✅' });
+                            // Optional: auto-submit logic requires extracting submit logic to separate function.
+                        }}
+                        onCancel={() => {
+                            setShowOtpModal(false);
+                            setVerifyingPhone('');
+                        }}
+                    />
+                </div>,
+                document.body
+            )}
         </div >
     );
 };

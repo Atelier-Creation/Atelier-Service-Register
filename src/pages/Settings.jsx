@@ -4,6 +4,7 @@ import api from '../api/client';
 import Cropper from 'react-easy-crop';
 import getCroppedImg from '../utils/cropImage';
 import Modal from '../components/ui/Modal';
+import WhatsAppSettings from '../components/WhatsAppSettings';
 import {
     FiSettings, FiBell, FiUser, FiLock, FiShield,
     FiChevronDown, FiChevronRight, FiCheck, FiAlertCircle,
@@ -356,37 +357,7 @@ const Settings = () => {
             icon: FiBell,
             color: 'bg-blue-50 text-[#4361ee]',
             content: (
-                <div className="card p-6">
-                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-                        <div className="p-2 bg-blue-50 text-[#4361ee] rounded-lg">
-                            <FiBell className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-gray-800">Notifications</h3>
-                            <p className="text-gray-500 text-xs">Configure how you receive alerts</p>
-                            <p className="text-orange-500 text-xs mt-1 font-medium">Not enabled for now</p>
-                        </div>
-                    </div>
-
-                    <div className="space-y-4">
-                        {[
-                            { title: 'WhatsApp Notifications', desc: 'Send automatic updates via WhatsApp' },
-                            { title: 'SMS Alerts', desc: 'Send critical updates via SMS' },
-                            { title: 'Email Reports', desc: 'Receive daily summary emails' }
-                        ].map((setting, idx) => (
-                            <div key={idx} className="flex items-center justify-between py-2 opacity-60 pointer-events-none">
-                                <div>
-                                    <p className="font-medium text-gray-700">{setting.title}</p>
-                                    <p className="text-gray-500 text-xs">{setting.desc}</p>
-                                </div>
-                                <label className="relative inline-flex items-center cursor-not-allowed">
-                                    <input type="checkbox" className="sr-only peer" disabled />
-                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#4361ee]"></div>
-                                </label>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                <WhatsAppSettings />
             )
         },
         {
