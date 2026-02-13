@@ -6,6 +6,7 @@ import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Jobs from './pages/Jobs';
+import JobForm from './pages/JobForm';
 import Search from './pages/Search';
 import Customers from './pages/Customers';
 import Settings from './pages/Settings';
@@ -75,6 +76,8 @@ function AppRoutes() {
       >
         <Route index element={<Dashboard />} />
         <Route path="jobs" element={<Jobs />} />
+        <Route path="jobs/new" element={<JobForm />} />
+        <Route path="jobs/edit/:id" element={<JobForm />} />
         <Route path="3rd-party-stats" element={<OutsourceStats />} />
         <Route path="search" element={<Search />} />
         <Route path="customers" element={<Customers />} />
