@@ -524,11 +524,16 @@ const Customers = () => {
                                         >
                                             <div className="flex items-start justify-between mb-3">
                                                 <div className="flex-1">
-                                                    <div className="flex items-center gap-2 mb-2">
+                                                    <div className="flex items-center flex-wrap gap-2 mb-2">
                                                         <span className="font-bold text-gray-800 text-lg">#{order.jobId}</span>
                                                         <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusBadgeClass(order.status)}`}>
                                                             {order.status}
                                                         </span>
+                                                        {order.isWarranty && (
+                                                            <span className="px-3 py-1 rounded-full text-xs font-semibold border bg-blue-100 text-blue-700 border-blue-200">
+                                                                Warranty
+                                                            </span>
+                                                        )}
                                                     </div>
                                                     <p className="text-gray-600 text-sm line-clamp-1">
                                                         <FiTool className="inline w-3 h-3 mr-1" />
@@ -602,9 +607,16 @@ const Customers = () => {
                                     {/* Status */}
                                     <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
                                         <span className="text-sm font-semibold text-gray-600">Status</span>
-                                        <span className={`px-4 py-2 rounded-full text-sm font-bold border ${getStatusBadgeClass(selectedOrder.status)}`}>
-                                            {selectedOrder.status}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            {selectedOrder.isWarranty && (
+                                                <span className="px-3 py-1 rounded-full text-xs font-bold border bg-blue-100 text-blue-700 border-blue-200">
+                                                    Warranty
+                                                </span>
+                                            )}
+                                            <span className={`px-4 py-2 rounded-full text-sm font-bold border ${getStatusBadgeClass(selectedOrder.status)}`}>
+                                                {selectedOrder.status}
+                                            </span>
+                                        </div>
                                     </div>
 
                                     {/* Customer Information */}

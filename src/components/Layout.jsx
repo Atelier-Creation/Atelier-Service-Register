@@ -5,8 +5,8 @@ import {
     FiHome, FiFileText, FiSearch, FiUsers, FiSettings,
     FiLogOut, FiMenu, FiX, FiTool, FiChevronDown, FiTrendingUp,
     FiChevronLeft, FiChevronRight, FiMessageSquare,
-    FiPhone,
     FiLock,
+    FiPhone,
 } from 'react-icons/fi';
 
 import api from '../api/client';
@@ -22,9 +22,10 @@ const Layout = () => {
     const [showMobileSearch, setShowMobileSearch] = useState(false);
     const userMenuRef = useRef(null);
     const [showDemoOverlay, setShowDemoOverlay] = useState(false);
+    const demoOverlayEnabled = import.meta.env.VITE_SHOW_DEMO_OVERLAY === "true";
     // Settings State
     const [settings, setSettings] = useState({ businessName: '', logo: '' });
-    const demoOverlayEnabled = import.meta.env.VITE_SHOW_DEMO_OVERLAY === "true";
+
     useEffect(() => {
         const fetchSettings = async () => {
             try {
@@ -36,6 +37,7 @@ const Layout = () => {
         };
         fetchSettings();
     }, []);
+
     useEffect(() => {
         if (demoOverlayEnabled && location.pathname !== "/login") {
             setShowDemoOverlay(true);
@@ -43,6 +45,7 @@ const Layout = () => {
             setShowDemoOverlay(false);
         }
     }, [location.pathname, demoOverlayEnabled]);
+
     const handleLogout = () => {
         logout();
         navigate('/login');
@@ -298,7 +301,6 @@ const Layout = () => {
                 <main className="flex-1 overflow-y-auto p-4 lg:p-8">
                     <Outlet />
 
-
                     {showDemoOverlay && (
                         <div className="absolute inset-0 bg-white/60 backdrop-blur-md flex items-center justify-center z-40">
 
@@ -313,7 +315,7 @@ const Layout = () => {
                                     </div>
 
                                     {/* Title */}
-                                    <h2 className="text-xl font-semibold text-red-500 mb-2">
+                                    <h2 className="text-xl font-semibold text-gray-800 mb-2">
                                         Demo Period Ended
                                     </h2>
 

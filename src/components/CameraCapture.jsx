@@ -92,7 +92,7 @@ const CameraCapture = ({ onCapture, onClose }) => {
     };
 
     return createPortal(
-        <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center sm:p-4 animate-fade-in">
+        <div className="fixed inset-0 bg-black/70 flex flex-col items-center justify-center sm:p-4 animate-fade-in !z-[10000]">
             <div className="relative w-full h-full sm:h-auto sm:max-w-md bg-black sm:rounded-2xl overflow-hidden shadow-2xl sm:border border-gray-800 flex flex-col">
 
                 {/* Header */}
