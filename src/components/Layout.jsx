@@ -19,7 +19,7 @@ const Layout = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [showMobileSearch, setShowMobileSearch] = useState(false);
     const userMenuRef = useRef(null);
-
+    const [showDemoOverlay, setShowDemoOverlay] = useState(false);
     // Settings State
     const [settings, setSettings] = useState({ businessName: '', logo: '' });
 
@@ -34,7 +34,13 @@ const Layout = () => {
         };
         fetchSettings();
     }, []);
-
+useEffect(() => {
+    if (location.pathname !== '/login') {
+        setShowDemoOverlay(true);
+    } else {
+        setShowDemoOverlay(false);
+    }
+}, [location.pathname]);
     const handleLogout = () => {
         logout();
         navigate('/login');
@@ -289,6 +295,23 @@ const Layout = () => {
                 {/* Scrollable Content */}
                 <main className="flex-1 overflow-y-auto p-4 lg:p-8">
                     <Outlet />
+
+
+                    {showDemoOverlay && (
+                        <div className="absolute inset-0 bg-white/60 backdrop-blur-md flex items-center justify-center z-40">
+
+                            <div className="bg-white rounded-xl shadow-xl p-8 text-center md:w-1/4 border border-gray-100">
+                                <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                                    Demo Period Ended
+                                </h2>
+
+                                <p className="text-sm text-gray-500">
+                                    The demo version has expired. Contact the administrator to activate the full version.
+                                </p>
+                            </div>
+
+                        </div>
+                    )}
                 </main>
             </div>
 
