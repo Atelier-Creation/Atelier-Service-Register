@@ -17,6 +17,7 @@ import api from '../api/client';
 const Dashboard = () => {
     const { stats, loading: statsLoading } = useJobs();
     const { user } = useAuth();
+    const userRole = user?.role?.role_name || user?.role;
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
 
     // Default empty stats if loading
@@ -32,7 +33,7 @@ const Dashboard = () => {
     const [techJobsLoading, setTechJobsLoading] = useState(false);
 
     useEffect(() => {
-        if (user?.role === 'technician') {
+        if (userRole === 'technician') {
             const fetchTechDashboard = async () => {
                 setTechJobsLoading(true);
                 try {
@@ -82,11 +83,11 @@ const Dashboard = () => {
             };
             fetchTechDashboard();
         }
-    }, [user]);
+    }, [userRole]);
 
     useEffect(() => {
         const fetchCharts = async () => {
-            if (user?.role === 'admin') {
+            if (userRole === 'admin') {
                 try {
                     const { data } = await api.get(`/jobs/stats/charts?period=${chartPeriod}`);
                     setChartData(data.chartData);
@@ -99,7 +100,7 @@ const Dashboard = () => {
             }
         };
         fetchCharts();
-    }, [user, chartPeriod]);
+    }, [userRole, chartPeriod]);
 
     // Helper for Status Classes
     const getStatusClass = (status) => {
@@ -166,11 +167,11 @@ const Dashboard = () => {
                     </p>
                 </div>
                 <div className="flex gap-3">
-                    <Link to="/jobs?action=new" className="btn-primary flex items-center gap-2">
+                    <Link to="/jobs/new" className="btn-primary flex items-center gap-2">
                         <FiFileText />
                         New Order
                     </Link>
-                    {user?.role === 'admin' && (
+                    {userRole === 'admin' && (
                         <Link to="/reports" className="btn-secondary">
                             View Reports
                         </Link>)}
@@ -194,7 +195,7 @@ const Dashboard = () => {
                 ) : (
                     <>
                         {statCards
-                            ?.filter(stat => user?.role === 'admin' || !['Total Revenue'].includes(stat.title))
+                            ?.filter(stat => userRole === 'admin' || !['Total Revenue'].includes(stat.title))
                             .map((stat, index) => (
                                 <StatCard
                                     key={index}
@@ -203,7 +204,7 @@ const Dashboard = () => {
                                 />
                             ))}
 
-                        {user?.role === 'technician' && (
+                        {userRole === 'technician' && (
                             <div className="card p-4 h-full flex flex-col justify-between relative group">
                                 <div className="flex justify-between items-start">
                                     <div className="flex items-center gap-3 z-10">
@@ -238,7 +239,7 @@ const Dashboard = () => {
             </div>
 
             {/* Charts Section - Admin Only */}
-            {user?.role === 'admin' && (
+            {userRole === 'admin' && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[400px]">
                     {/* Main Area Chart */}
                     <div className="card p-6 lg:col-span-2 flex flex-col">
@@ -381,7 +382,7 @@ const Dashboard = () => {
 
 
             {/* Technician Dashboard Sections */}
-            {user?.role === 'technician' && (
+            {userRole === 'technician' && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-6">
                     {/* Today's Deliveries */}
                     <div className="card p-6 h-full">

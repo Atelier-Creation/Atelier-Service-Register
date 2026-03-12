@@ -12,11 +12,13 @@ import {
     FiEyeOff,
     FiEye,
     FiUpload,
-    FiScissors
+    FiScissors,
+    FiGitBranch
 } from 'react-icons/fi';
 
 const Settings = () => {
     const { user } = useAuth();
+    const userRole = user?.role?.role_name || user?.role;
     const [activeTab, setActiveTab] = useState('general');
 
     // General Profile State
@@ -32,7 +34,7 @@ const Settings = () => {
     // User Management State
     const [users, setUsers] = useState([]);
     const [showUserForm, setShowUserForm] = useState(false);
-    const [newUser, setNewUser] = useState({ name: '', username: '', password: '', role: 'technician' });
+    const [newUser, setNewUser] = useState({ name: '', username: '', password: '', role: 'technician', branches: [] });
     const [userLoading, setUserLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
@@ -42,12 +44,58 @@ const Settings = () => {
         }
     }, [user]);
 
-    // Fetch Users when tab is active and user is admin
+    // Fetch data when tab is active
     useEffect(() => {
-        if (activeTab === 'users' && user?.role === 'admin') {
+        if (activeTab === 'users' && (userRole === 'admin' || userRole === 'branch_manager')) {
             fetchUsers();
         }
-    }, [activeTab, user]);
+        if ((activeTab === 'branches' || activeTab === 'users') && userRole === 'admin') {
+            fetchBranches();
+        }
+    }, [activeTab, userRole]);
+
+    // Branch Management State
+    const [branches, setBranches] = useState([]);
+    const [showBranchForm, setShowBranchForm] = useState(false);
+    const [newBranch, setNewBranch] = useState({ name: '', code: '', address: '', phone: '' });
+    const [branchLoading, setBranchLoading] = useState(false);
+
+    const fetchBranches = async () => {
+        try {
+            const { data } = await api.get('/branches');
+            setBranches(data);
+        } catch (error) {
+            console.error("Failed to fetch branches", error);
+        }
+    };
+
+    const handleCreateBranch = async (e) => {
+        e.preventDefault();
+        setBranchLoading(true);
+        setStatusMsg({ type: '', text: '' });
+        try {
+            await api.post('/branches', newBranch);
+            setShowBranchForm(false);
+            setNewBranch({ name: '', code: '', address: '', phone: '' });
+            fetchBranches();
+            setStatusMsg({ type: 'success', text: 'Branch created successfully' });
+        } catch (error) {
+            setStatusMsg({ type: 'error', text: error.response?.data?.message || 'Failed to create branch' });
+        } finally {
+            setBranchLoading(false);
+        }
+    };
+
+    const handleDeleteBranch = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this branch?')) return;
+        try {
+            await api.delete(`/branches/${id}`);
+            fetchBranches();
+            setStatusMsg({ type: 'success', text: 'Branch removed' });
+        } catch (error) {
+            setStatusMsg({ type: 'error', text: error.response?.data?.message || 'Failed to delete branch' });
+        }
+    };
 
     // App Settings State
     const [appSettings, setAppSettings] = useState({
@@ -102,10 +150,10 @@ const Settings = () => {
     };
 
     useEffect(() => {
-        if (user?.role === 'admin') {
+        if (userRole === 'admin') {
             fetchSettings();
         }
-    }, [user]);
+    }, [userRole]);
 
     const getBaseUrl = () => {
         const url = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -189,12 +237,15 @@ const Settings = () => {
     const handleCreateUser = async (e) => {
         e.preventDefault();
         setUserLoading(true);
-        setStatusMsg({ type: '', text: '' }); // Clear global status or use local? Using global for simplicity
+        setStatusMsg({ type: '', text: '' });
 
         try {
-            await api.post('/auth/users', newUser);
+            const payload = { ...newUser };
+            if (!payload.branch) delete payload.branch;
+
+            await api.post('/auth/users', payload);
             setShowUserForm(false);
-            setNewUser({ name: '', username: '', password: '', role: 'technician' });
+            setNewUser({ name: '', username: '', password: '', role: 'technician', branches: [] });
             fetchUsers();
             setStatusMsg({ type: 'success', text: 'User created successfully' });
         } catch (error) {
@@ -215,8 +266,8 @@ const Settings = () => {
         }
     };
 
-    const staffCount = users?.filter(u => u.role !== 'admin').length;
-    const canAddUser = staffCount < 1;
+    const staffCount = users?.filter(u => (u.role?.role_name || u.role) !== 'admin').length;
+    const canAddUser = true; // Unlimited users allowed
 
     const sections = [
         {
@@ -292,7 +343,7 @@ const Settings = () => {
                     </form>
 
                     {/* Business Settings Section - Admin Only */}
-                    {user?.role === 'admin' && (
+                    {userRole === 'admin' && (
                         <div className="mt-8 border-t border-gray-200 pt-6">
                             <h3 className="font-bold text-gray-800 mb-4">Business Configuration</h3>
                             <form onSubmit={handleUpdateSettings} className="space-y-4">
@@ -351,6 +402,7 @@ const Settings = () => {
                 </div>
             )
         },
+        /*
         {
             id: 'notifications',
             label: 'Notifications',
@@ -360,6 +412,7 @@ const Settings = () => {
                 <WhatsAppSettings />
             )
         },
+        */
         {
             id: 'security',
             label: 'Security',
@@ -391,7 +444,93 @@ const Settings = () => {
                 </div>
             )
         },
-        ...(user?.role === 'admin' ? [{
+        ...(userRole === 'admin' ? [{
+            id: 'branches',
+            label: 'Branch Management',
+            icon: FiGitBranch, // Using FiShield or anything else
+            color: 'bg-teal-50 text-teal-600',
+            content: (
+                <div className="space-y-6">
+                    <div className="card p-6">
+                        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-teal-50 text-teal-600 rounded-lg">
+                                    <FiShield className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-gray-800">Branch Management</h3>
+                                    <p className="text-gray-500 text-xs">Manage your business branches</p>
+                                </div>
+                            </div>
+                            {!showBranchForm && (
+                                <button onClick={() => setShowBranchForm(true)} className="btn-primary flex items-center gap-2 text-sm py-2">
+                                    <FiPlus /> Add Branch
+                                </button>
+                            )}
+                        </div>
+
+                        {statusMsg.text && activeTab === 'branches' && (
+                            <div className={`mb-4 p-3 rounded-lg flex items-center gap-2 text-sm ${statusMsg.type === 'success' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'
+                                }`}>
+                                {statusMsg.type === 'success' ? <FiCheck /> : <FiAlertCircle />}
+                                {statusMsg.text}
+                            </div>
+                        )}
+
+                        {/* Add Branch Form */}
+                        {showBranchForm && (
+                            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6 animate-fade-in relative">
+                                <button onClick={() => setShowBranchForm(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                                    <FiX />
+                                </button>
+                                <h4 className="font-bold text-gray-700 mb-4">Add New Branch</h4>
+                                <form onSubmit={handleCreateBranch} className="grid grid-cols-1 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Branch Name</label>
+                                            <input type="text" className="input-field" required value={newBranch.name} onChange={e => setNewBranch({ ...newBranch, name: e.target.value })} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Branch Code</label>
+                                            <input type="text" className="input-field" required value={newBranch.code} onChange={e => setNewBranch({ ...newBranch, code: e.target.value })} />
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-end mt-2">
+                                        <button type="submit" className="btn-primary" disabled={branchLoading}>{branchLoading ? 'Creating...' : 'Create Branch'}</button>
+                                    </div>
+                                </form>
+                            </div>
+                        )}
+
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-gray-50 border-b border-gray-200">
+                                    <tr>
+                                        <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Branch Name</th>
+                                        <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Code</th>
+                                        <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {branches.map(b => (
+                                        <tr key={b._id}>
+                                            <td className="py-3 px-4 font-medium text-gray-800">{b.name}</td>
+                                            <td className="py-3 px-4 text-sm text-gray-600">{b.code}</td>
+                                            <td className="py-3 px-4 text-right">
+                                                <button onClick={() => handleDeleteBranch(b._id)} className="text-gray-400 hover:text-red-500 p-2">
+                                                    <FiTrash2 />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            )
+        }] : []),
+        ...((userRole === 'admin' || userRole === 'branch_manager') ? [{
             id: 'users',
             label: 'User Management',
             icon: FiUser,
@@ -406,7 +545,7 @@ const Settings = () => {
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-gray-800">User Management</h3>
-                                    <p className="text-gray-500 text-xs">Manage team members (Max 1 Staff)</p>
+                                    <p className="text-gray-500 text-xs">Manage team members</p>
                                 </div>
                             </div>
                             {canAddUser && !showUserForm && (
@@ -467,21 +606,41 @@ const Settings = () => {
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
                                             <select className="input-field" value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })}>
                                                 <option value="technician">Technician</option>
-                                                <option value="admin">Admin</option>
+                                                {userRole === 'admin' && <option value="branch_manager">Branch Manager</option>}
+                                                {userRole === 'admin' && <option value="admin">Admin</option>}
                                             </select>
                                         </div>
                                     </div>
+
+                                    {userRole === 'admin' && newUser.role !== 'admin' && (
+                                        <div className="mt-2">
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Branches (Select multiple)</label>
+                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 bg-white p-3 border border-gray-200 rounded-lg max-h-40 overflow-y-auto">
+                                                {branches.map(b => (
+                                                    <label key={b._id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 p-1 rounded">
+                                                        <input
+                                                            type="checkbox"
+                                                            className="rounded text-blue-600 focus:ring-blue-500"
+                                                            checked={newUser.branches?.includes(b._id)}
+                                                            onChange={e => {
+                                                                const updated = e.target.checked
+                                                                    ? [...(newUser.branches || []), b._id]
+                                                                    : newUser.branches?.filter(id => id !== b._id);
+                                                                setNewUser({ ...newUser, branches: updated });
+                                                            }}
+                                                        />
+                                                        <span className="truncate">{b.name}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                            {branches.length === 0 && <p className="text-xs text-gray-400 mt-1 italic">No branches found. Create one first.</p>}
+                                        </div>
+                                    )}
 
                                     <div className="flex justify-end mt-2">
                                         <button type="submit" className="btn-primary" disabled={userLoading}>{userLoading ? 'Creating...' : 'Create User'}</button>
                                     </div>
                                 </form>
-                            </div>
-                        )}
-
-                        {!canAddUser && !showUserForm && (
-                            <div className="bg-amber-50 text-amber-600 border border-amber-100 p-3 rounded-lg text-sm mb-4">
-                                You have reached the limit of 1 user account. Delete an existing user to create a new one.
                             </div>
                         )}
 
@@ -501,9 +660,18 @@ const Settings = () => {
                                                 <p className="font-medium text-gray-800">{u.name}</p>
                                                 <p className="text-xs text-gray-400">@{u.username}</p>
                                             </td>
-                                            <td className="py-3 px-4 capitalize text-sm text-gray-600">{u.role}</td>
+                                            <td className="py-3 px-4 capitalize text-sm text-gray-600">
+                                                {u.role?.role_name || u.role}
+                                                <div className="flex flex-wrap gap-1 mt-1">
+                                                    {(u.branches || (u.branch ? [u.branch] : [])).map(b => (
+                                                        <span key={b._id} className="text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200">
+                                                            {b.name}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </td>
                                             <td className="py-3 px-4 text-right">
-                                                {u.role !== 'admin' && (
+                                                {(u.role?.role_name || u.role) !== 'admin' && (
                                                     <button onClick={() => handleDeleteUser(u._id)} className="text-gray-400 hover:text-red-500 p-2">
                                                         <FiTrash2 />
                                                     </button>

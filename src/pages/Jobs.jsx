@@ -36,6 +36,7 @@ const Jobs = () => {
     const [debouncedSearch, setDebouncedSearch] = useState('');
 
     const { user } = useAuth();
+    const userRole = user?.role?.role_name || user?.role;
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -104,10 +105,9 @@ const Jobs = () => {
         const searchParams = new URLSearchParams(location.search);
 
         // Handle 'New Order' action
+        // Handle 'New Order' action - redirect to new form
         if (searchParams.get('action') === 'new') {
-            setEditingJob(null);
-            setShowForm(true);
-            navigate('/jobs', { replace: true });
+            navigate('/jobs/new', { replace: true });
         }
 
         // Handle search query
@@ -145,32 +145,12 @@ const Jobs = () => {
     // Actually, showOscModal etc are AFTER this block in original.
     // I'll target specific lines.
 
-    // OTP & Settings State
-    const [whatsappSettings, setWhatsappSettings] = useState(null);
-    const [showOtpModal, setShowOtpModal] = useState(false);
-    const [otpVerified, setOtpVerified] = useState(false);
-    const [verifyingPhone, setVerifyingPhone] = useState('');
-
     // Add simple api import if not available globally (it is imported at top)
     // Add client import at top if missing? It wasn't imported in my view_file_outline but I saw it used in line 148: api.get...
     // Wait, check imports again. view_file_outline lines 1-20 didn't show `import api ...`.
     // It showed `import { useJobs } from ...`.
     // Let me check if `api` is imported.
 
-    useEffect(() => {
-        const fetchSettings = async () => {
-            try {
-                // Check if user is logged in before fetching
-                if (user) {
-                    const { data } = await api.get('/settings');
-                    setWhatsappSettings(data.whatsapp);
-                }
-            } catch (error) {
-                console.error('Failed to fetch settings', error);
-            }
-        };
-        fetchSettings();
-    }, [user]);
     const [outsourceData, setOutsourceData] = useState({ name: '', phone: '', cost: '' });
     const [vendors, setVendors] = useState([]);
     const costInputRef = useRef(null);
@@ -580,7 +560,7 @@ const Jobs = () => {
                     <h1 className="text-2xl font-bold text-gray-800">Orders</h1>
                     <p className="text-gray-500 text-sm mt-1">Manage all service orders</p>
                 </div>
-                {['admin', 'technician'].includes(user?.role) && (
+                {['admin', 'technician'].includes(userRole) && (
                     <button
                         onClick={() => navigate('/jobs/new')}
                         className="btn-primary flex items-center gap-2"
@@ -641,6 +621,9 @@ const Jobs = () => {
                                 <tr key={job._id || job.id || job.jobId} className="hover:bg-gray-50/50 transition-colors">
                                     <td className="py-4 px-6">
                                         <span className="font-mono text-sm font-medium text-gray-700">#{(job.jobId || job.id || job._id || '').toString().slice(-6)}</span>
+                                        {job.branch && (
+                                            <p className="text-[10px] text-gray-400 mt-0.5">{job.branch.name}</p>
+                                        )}
                                     </td>
                                     <td className="py-4 px-6">
                                         <div>
@@ -681,7 +664,7 @@ const Jobs = () => {
                                                     </div>
                                                 </div>
 
-                                                {["admin"].includes(user?.role) && (
+                                                {["admin"].includes(userRole) && (
                                                     <div className="flex items-center gap-1 opacity-75">
                                                         <span>Paid:</span> ₹{job.outsourced.cost}
                                                     </div>
@@ -713,7 +696,7 @@ const Jobs = () => {
                                     </td>
                                     <td className="py-4 px-6 text-right">
                                         <div className="flex items-center justify-end gap-2">
-                                            {['admin', 'technician'].includes(user?.role) && (
+                                            {['admin', 'technician'].includes(userRole) && (
                                                 <button
                                                     onClick={() => { setViewJob(job); setShowViewModal(true); }}
                                                     className="p-2 bg-white text-gray-400 hover:text-[#4361ee] hover:shadow-md rounded-lg shadow-sm border border-gray-100 transition-all"
@@ -722,7 +705,7 @@ const Jobs = () => {
                                                     <FiEye className="w-4 h-4" />
                                                 </button>
                                             )}
-                                            {['admin', 'technician'].includes(user?.role) && job.status !== 'delivered' && job.status !== 'returned' && (
+                                            {['admin', 'technician'].includes(userRole) && job.status !== 'delivered' && job.status !== 'returned' && (
                                                 <button
                                                     onClick={() => handleEdit(job)}
                                                     className="p-2 bg-white text-gray-400 hover:text-[#4361ee] hover:shadow-md rounded-lg shadow-sm border border-gray-100 transition-all"
@@ -731,7 +714,7 @@ const Jobs = () => {
                                                     <FiEdit2 className="w-4 h-4" />
                                                 </button>
                                             )}
-                                            {['admin', 'technician'].includes(user?.role) && job.status !== 'delivered' && job.status !== 'returned' && (
+                                            {['admin', 'technician'].includes(userRole) && job.status !== 'delivered' && job.status !== 'returned' && (
                                                 job.status === 'outsourced' ? (
                                                     <button
                                                         onClick={() => handleReceiveBack(job)}
@@ -751,7 +734,7 @@ const Jobs = () => {
                                                 )
                                             )}
                                             {/* Get Payment Action */}
-                                            {['admin', 'technician'].includes(user?.role) && job.status !== 'delivered' && job.status !== 'returned' && job.status !== 'outsourced' && (
+                                            {['admin', 'technician'].includes(userRole) && job.status !== 'delivered' && job.status !== 'returned' && job.status !== 'outsourced' && (
                                                 <>
                                                     <button
                                                         onClick={() => handleReturn(job)}
@@ -769,7 +752,7 @@ const Jobs = () => {
                                                     </button>
                                                 </>
                                             )}
-                                            {user?.role === 'admin' && (
+                                            {userRole === 'admin' && (
                                                 <button
                                                     onClick={() => handleDelete(job.jobId || job.id)}
                                                     className="p-2 bg-white text-gray-400 hover:text-red-500 hover:shadow-md rounded-lg shadow-sm border border-gray-100 transition-all"
@@ -1117,16 +1100,7 @@ const Jobs = () => {
                         </div>
                     )}
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Warranty Details</label>
-                        <input
-                            type="text"
-                            value={paymentData.warranty}
-                            onChange={(e) => setPaymentData({ ...paymentData, warranty: e.target.value })}
-                            className="input-field"
-                            placeholder="e.g. 1 Month Testing Warranty"
-                        />
-                    </div>
+
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">After Repair Images (Proof of Delivery condition)</label>

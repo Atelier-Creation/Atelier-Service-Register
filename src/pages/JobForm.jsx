@@ -4,7 +4,6 @@ import toast from 'react-hot-toast';
 import { useJobs } from '../context/JobContext';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/client';
-import OTPVerification from '../components/OTPVerification';
 import CameraCapture from '../components/CameraCapture';
 import CreatableSelect from '../components/ui/CreatableSelect';
 import Select from '../components/ui/Select';
@@ -27,12 +26,6 @@ const JobForm = () => {
 
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(!!id);
-
-    // OTP & Settings State
-    const [whatsappSettings, setWhatsappSettings] = useState(null);
-    const [showOtpModal, setShowOtpModal] = useState(false);
-    const [otpVerified, setOtpVerified] = useState(false);
-    const [verifyingPhone, setVerifyingPhone] = useState('');
 
     // Files
     const [beforeFiles, setBeforeFiles] = useState([]);
@@ -63,20 +56,6 @@ const JobForm = () => {
         visitDate: '',
         receivedDate: new Date().toISOString().split('T')[0]
     });
-
-    useEffect(() => {
-        const fetchSettings = async () => {
-            try {
-                if (user) {
-                    const { data } = await api.get('/settings');
-                    setWhatsappSettings(data.whatsapp);
-                }
-            } catch (error) {
-                console.error('Failed to fetch settings', error);
-            }
-        };
-        fetchSettings();
-    }, [user]);
 
     useEffect(() => {
         if (id) {
@@ -147,13 +126,6 @@ const JobForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        // OTP Verification Check (Only for New Orders)
-        if (!id && whatsappSettings?.enabled && whatsappSettings?.otpVerification && !otpVerified) {
-            setVerifyingPhone(formData.phone);
-            setShowOtpModal(true);
-            return;
-        }
 
         setLoading(true);
         const fullDeviceName = `${formData.brand} ${formData.model}`.trim();
@@ -255,19 +227,13 @@ const JobForm = () => {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                                     <div className="relative">
-                                        {otpVerified && (
-                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 animate-in zoom-in duration-200">
-                                                <BiBadgeCheck className="w-5 h-5" />
-                                            </div>
-                                        )}
                                         <input
                                             type="tel"
                                             name="phone"
                                             value={formData.phone}
                                             onChange={handleChange}
-                                            className={`input-field transition-all ${otpVerified ? '!pr-10 bg-green-50 text-green-900 border-green-200 cursor-not-allowed font-medium' : ''}`}
+                                            className="input-field transition-all"
                                             required
-                                            disabled={otpVerified}
                                         />
                                     </div>
                                 </div>
@@ -515,26 +481,6 @@ const JobForm = () => {
 
                 </form>
             </div >
-
-            {/* OTP Modal */}
-            {
-                showOtpModal && (
-                    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-                        <OTPVerification
-                            phone={verifyingPhone}
-                            onVerified={() => {
-                                setOtpVerified(true);
-                                setShowOtpModal(false);
-                                toast.success('Verified! Click Save Order to finish.', { icon: '✅' });
-                            }}
-                            onCancel={() => {
-                                setShowOtpModal(false);
-                                setVerifyingPhone('');
-                            }}
-                        />
-                    </div>
-                )
-            }
 
             {/* Camera Modal */}
             {

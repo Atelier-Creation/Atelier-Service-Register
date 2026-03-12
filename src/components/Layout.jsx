@@ -22,6 +22,10 @@ const Layout = () => {
 
     // Settings State
     const [settings, setSettings] = useState({ businessName: '', logo: '' });
+    
+    // Branch State
+    const [branches, setBranches] = useState([]);
+    const [selectedBranch, setSelectedBranch] = useState(localStorage.getItem('selectedBranch') || 'all');
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -33,7 +37,26 @@ const Layout = () => {
             }
         };
         fetchSettings();
-    }, []);
+
+        if (user?.role === 'admin') {
+            const fetchBranches = async () => {
+                try {
+                    const { data } = await api.get('/branches');
+                    setBranches(data);
+                } catch (error) {
+                    console.error("Failed to fetch branches", error);
+                }
+            };
+            fetchBranches();
+        }
+    }, [user]);
+
+    const handleBranchChange = (e) => {
+        const value = e.target.value;
+        setSelectedBranch(value);
+        localStorage.setItem('selectedBranch', value);
+        window.location.reload(); // Reload to apply filter if components use it from localStorage
+    };
 
     const handleLogout = () => {
         logout();
@@ -54,9 +77,11 @@ const Layout = () => {
         { path: '/jobs', icon: FiFileText, label: 'Orders' },
         { path: '/3rd-party-stats', icon: FiTool, label: 'Out Source' },
         { path: '/customers', icon: FiUsers, label: 'Customers' },
-        ...(user?.role === 'admin' ? [
-            { path: '/marketing', icon: FiMessageSquare, label: 'Marketing' },
-            { path: '/reports', icon: FiTrendingUp, label: 'Reports' },
+        ...((user?.role === 'admin' || user?.role?.role_name === 'admin') ? [
+            // { path: '/marketing', icon: FiMessageSquare, label: 'Marketing' },
+            { path: '/reports', icon: FiTrendingUp, label: 'Reports' }
+        ] : []),
+        ...((user?.role === 'admin' || user?.role === 'branch_manager' || user?.role?.role_name === 'admin') ? [
             { path: '/settings', icon: FiSettings, label: 'Settings' }
         ] : []),
     ];
@@ -209,6 +234,43 @@ const Layout = () => {
                             </div>
                         )}
 
+                        {/* Branch Selector */}
+                        {user?.role === 'admin' ? (
+                            <div className="hidden md:flex items-center ml-2">
+                                <select 
+                                    className="bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-1.5 px-3 whitespace-nowrap"
+                                    value={selectedBranch}
+                                    onChange={handleBranchChange}
+                                >
+                                    <option value="all">All Branches</option>
+                                    {branches.map(b => (
+                                        <option key={b._id} value={b._id}>{b.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        ) : (
+                            user?.branches?.length > 0 && (
+                                <div className="hidden md:flex items-center ml-2">
+                                    {user.branches.length === 1 ? (
+                                        <div className="bg-blue-50 border border-blue-100 px-3 py-1 rounded-full text-xs font-semibold text-blue-600 whitespace-nowrap">
+                                            {user.branches[0]?.name || 'Branch'}
+                                        </div>
+                                    ) : (
+                                        <select 
+                                            className="bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full py-1 px-3 whitespace-nowrap"
+                                            value={selectedBranch}
+                                            onChange={handleBranchChange}
+                                        >
+                                            <option value="all">My Branches</option>
+                                            {user.branches.map(b => (
+                                                <option key={b._id} value={b._id}>{b.name}</option>
+                                            ))}
+                                        </select>
+                                    )}
+                                </div>
+                            )
+                        )}
+
                         <div className="h-8 w-px bg-gray-200 mx-1 hidden lg:block"></div>
 
                         {/* User Profile... */}
@@ -222,7 +284,7 @@ const Layout = () => {
                                 </div>
                                 <div className="hidden md:block text-left">
                                     <p className="text-sm font-semibold text-gray-700 leading-none mb-1">{user?.username}</p>
-                                    <p className="text-xs text-gray-500 capitalize leading-none">{user?.role}</p>
+                                    <p className="text-xs text-gray-500 capitalize leading-none">{user?.role?.role_name || user?.role}</p>
                                 </div>
                                 <FiChevronDown className={`hidden md:block w-4 h-4 text-gray-400 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
                             </div>
@@ -232,7 +294,7 @@ const Layout = () => {
                                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 animation-fade-in z-50">
                                     <div className="px-4 py-2 border-b border-gray-50 md:hidden">
                                         <p className="text-sm font-semibold text-gray-700">{user?.username}</p>
-                                        <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
+                                        <p className="text-xs text-gray-500 capitalize">{user?.role?.role_name || user?.role}</p>
                                     </div>
 
                                     <button
