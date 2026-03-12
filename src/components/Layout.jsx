@@ -5,6 +5,8 @@ import {
     FiHome, FiFileText, FiSearch, FiUsers, FiSettings,
     FiLogOut, FiMenu, FiX, FiTool, FiChevronDown, FiTrendingUp,
     FiChevronLeft, FiChevronRight, FiMessageSquare,
+    FiPhone,
+    FiLock,
 } from 'react-icons/fi';
 
 import api from '../api/client';
@@ -22,7 +24,7 @@ const Layout = () => {
     const [showDemoOverlay, setShowDemoOverlay] = useState(false);
     // Settings State
     const [settings, setSettings] = useState({ businessName: '', logo: '' });
-
+    const demoOverlayEnabled = import.meta.env.VITE_SHOW_DEMO_OVERLAY === "true";
     useEffect(() => {
         const fetchSettings = async () => {
             try {
@@ -34,13 +36,13 @@ const Layout = () => {
         };
         fetchSettings();
     }, []);
-useEffect(() => {
-    if (location.pathname !== '/login') {
-        setShowDemoOverlay(true);
-    } else {
-        setShowDemoOverlay(false);
-    }
-}, [location.pathname]);
+    useEffect(() => {
+        if (demoOverlayEnabled && location.pathname !== "/login") {
+            setShowDemoOverlay(true);
+        } else {
+            setShowDemoOverlay(false);
+        }
+    }, [location.pathname, demoOverlayEnabled]);
     const handleLogout = () => {
         logout();
         navigate('/login');
@@ -300,14 +302,37 @@ useEffect(() => {
                     {showDemoOverlay && (
                         <div className="absolute inset-0 bg-white/60 backdrop-blur-md flex items-center justify-center z-40">
 
-                            <div className="bg-white rounded-xl shadow-xl p-8 text-center md:w-1/4 border border-gray-100">
-                                <h2 className="text-xl font-semibold text-gray-800 mb-2">
-                                    Demo Period Ended
-                                </h2>
+                            <div className="flex items-center justify-center min-h-[60vh]">
+                                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 text-center max-w-sm w-full">
 
-                                <p className="text-sm text-gray-500">
-                                    The demo version has expired. Contact the administrator to activate the full version.
-                                </p>
+                                    {/* Icon */}
+                                    <div className="flex justify-center mb-4">
+                                        <div className="bg-red-100 p-4 rounded-full">
+                                            <FiLock className="w-8 h-8 text-red-500" />
+                                        </div>
+                                    </div>
+
+                                    {/* Title */}
+                                    <h2 className="text-xl font-semibold text-red-500 mb-2">
+                                        Demo Period Ended
+                                    </h2>
+
+                                    {/* Description */}
+                                    <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+                                        Your demo access has expired.
+                                        Please contact our support team to activate the full version.
+                                    </p>
+
+                                    {/* Button */}
+                                    <a
+                                        href="tel:+919487280241"
+                                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#3D5EE1] text-white rounded-lg text-sm font-medium hover:bg-[#2f4cc8] transition"
+                                    >
+                                        <FiPhone className="w-4 h-4" />
+                                        Contact Support
+                                    </a>
+
+                                </div>
                             </div>
 
                         </div>
